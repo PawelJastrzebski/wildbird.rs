@@ -12,7 +12,7 @@ pub trait Service {
 
 /// Private Module
 ///
-/// **Don't not use in your code**
+/// **Do not use in your code**
 pub mod private {
     use super::Service;
     use std::sync::Arc;
