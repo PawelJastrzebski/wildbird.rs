@@ -7,9 +7,7 @@ mod tests {
 
     #[derive(Service)]
     struct HelloService {
-        // #[inject]
         test: Arc<Option<String>>,
-        // #[inject("env:path", default = "test")]
         component_name: String,
     }
 
@@ -17,7 +15,7 @@ mod tests {
     fn hello_init() -> HelloService {
         HelloService {
             test: Arc::new(Some("".to_string())),
-            component_name: "Test".to_string(),
+            component_name: "Hello".to_string(),
         }
     }
 
@@ -27,9 +25,26 @@ mod tests {
         }
     }
 
+    #[derive(Service)]
+    struct WorldService {
+    }
+
+    #[ServiceConstruct]
+    fn hello_init() -> WorldService {
+        WorldService {}
+    }
+
+    impl WorldService {
+        pub fn world(&self) {
+            println!("World");
+        }
+    }
+
     #[test]
     fn should_derive_Service() {
         let t: Arc<HelloService> = HelloService.instance();
+        let t: Arc<WorldService> = WorldService.instance();
         HelloService.hello();
+        WorldService.world();
     }
 }

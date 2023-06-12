@@ -27,7 +27,7 @@ pub fn impl_service_derive(ast: DeriveInput) -> TokenStream {
 fn impl_static(struct_name: &Ident) ->  proc_macro2::TokenStream {
     quote! {
         #[allow(non_upper_case_globals)]
-        static HelloService: wildbird::private::ServiceLazy<#struct_name> = wildbird::private::service_construct::<#struct_name>();
+        static #struct_name: wildbird::private::ServiceLazy<#struct_name> = wildbird::private::service_construct::<#struct_name>();
     }
 }
 
