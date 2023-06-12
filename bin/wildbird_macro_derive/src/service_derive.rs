@@ -6,7 +6,7 @@ use crate::models::parse_fields;
 
 pub fn impl_service_derive(ast: DeriveInput) -> TokenStream {
     let struct_name = &ast.ident;
-    println!("derive(Service) for {}", struct_name.to_string());
+    // println!("derive(Service) for {}", struct_name.to_string());
 
     if let Data::Struct(data) = ast.data {
         let _fields = parse_fields(&data.fields);
@@ -34,7 +34,7 @@ fn impl_static(struct_name: &Ident) ->  proc_macro2::TokenStream {
 fn impl_instance(struct_name: &Ident) -> proc_macro2::TokenStream {
     quote! {
          impl #struct_name {
-            fn instance(&self) -> Arc<#struct_name> {
+            fn instance(&self) -> std::sync::Arc<#struct_name> {
                 #struct_name.clone()
             }
         }
@@ -42,7 +42,6 @@ fn impl_instance(struct_name: &Ident) -> proc_macro2::TokenStream {
 }
 
 use syn::{ItemFn, ReturnType};
-
 
 pub fn impl_service_construct(fun: ItemFn) -> TokenStream {
     match fun.sig.output {
@@ -61,11 +60,11 @@ pub fn impl_service_construct(fun: ItemFn) -> TokenStream {
                     }
                 };
 
-            println!("\
-                    Service: {service_type} \
-                    body: {body}\
-                    res: {}
-                ", gen.to_token_stream().to_string());
+            // println!("\
+            //         Service: {service_type} \
+            //         body: {body}\
+            //         res: {}
+            //     ", gen.to_token_stream().to_string());
 
             gen.into()
         }

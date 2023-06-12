@@ -1,7 +1,9 @@
 [package]
 name = "wildbird"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
+description = "Rust Framework"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,3 +17,13 @@ wildbird_macro_derive = {path = "./bin/wildbird_macro_derive" }
 members = [
     "./bin/wildbird_macro_derive"
 ]
+
+[profile.dev]
+opt-level = 0
+debug = 0
+incremental = true
+
+[profile.release]
+opt-level = 3
+debug = 0
+lto = "thin"

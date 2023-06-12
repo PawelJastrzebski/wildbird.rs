@@ -1,14 +1,12 @@
 #![allow(non_snake_case, unused_imports)]
-#![feature(log_syntax)]
-#![feature(proc_macro_quote)]
+#![feature(log_syntax, proc_macro_quote)]
 extern crate proc_macro;
 extern crate core;
 
+#[doc(hidden)]
 mod models;
-mod service_derive;
 
-#[macro_use]
-mod test_utils;
+mod service_derive;
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -32,9 +30,8 @@ pub fn ServiceConstruct(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[cfg(test)]
 mod parser_tests {
     use proc_macro::TokenStream;
-    use quote::{quote, ToTokens};
+    use quote::*;
     use syn::*;
-    use syn::__private::TokenStream2;
     use super::models::parse_fields;
     use super::test_utils::*;
 

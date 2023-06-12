@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[allow(dead_code)]
 /// Only for debugging
 ///
 /// use:  cargo expand --test test_derive
