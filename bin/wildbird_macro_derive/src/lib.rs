@@ -74,16 +74,6 @@ pub fn service(attr: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
 
-#[proc_macro_attribute]
-pub fn ServiceConstruct(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let Ok(construct_fn) = syn::parse::<syn::ItemFn>(item.clone()) else {
-        return item;
-    };
-
-    let body = construct_fn.block.to_token_stream();
-    service_derive::impl_service_construct(construct_fn, &body)
-}
-
 #[cfg(test)]
 mod parser_tests {
     use proc_macro::TokenStream;

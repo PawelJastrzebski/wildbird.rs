@@ -1,16 +1,46 @@
 <br />
-<h1 style="color: #376FFF; font-size: 2rem; font-weight: 800;">
+<h1 style="color: #376FFF; font-size: 2rem; font-weight: 500;">
     Rust framework 🐦 <sup style="color: black; font-size: 1.2rem; font-weight: 400;">'Experimental</sup>
 </h1>
 
- # Table of contents
+# Table of contents
 
- - [Services](#Services)
- - [Authors](#Created-By)
- - [License](#License)
-
+- [Services](#Services)
+- [Authors](#Created-By)
+- [License](#License)
 
 # Services
+
+Create service instance (Singleton) in one step
+
+```rust
+use wildbird::derive::*;
+
+// Convert struct to Service + impl construct()
+
+#[service(construct = "init")]
+struct HelloService {
+    component_name: String,
+}
+
+impl HelloService {
+    fn init() -> HelloService {
+        HelloService {
+            component_name: "Hello penguins 🐧".to_string(),
+        }
+    }
+
+    fn sey_hello(&self) {
+        println!("Hello! 👋")
+    }
+}
+
+fn main() {
+    HelloService.sey_hello();
+}
+```
+
+<br />
 
 ```rust
 use wildbird::derive::*;
@@ -29,34 +59,6 @@ fn hello_init() -> HelloService {
     }
 }
 ```
-<br />
-
-Convert struct to Service + impl construct()
-```rust
-use wildbird::derive::*;
-
-#[service(construct = "init")]
-struct HelloService {
-    component_name: String,
-}
-
-impl HelloService {
-    
-    fn init() -> HelloService {
-        HelloService {
-            component_name: "Hello penguins 🐧".to_string(),
-        }
-    }
-    
-    fn sey_hello(&self) {
-        println!("Hello! 👋")
-    } 
-}
-
-fn main() {
-    HelloService.sey_hello();
-}
-```
 
 # Created By
 
@@ -67,4 +69,5 @@ fn main() {
 <br />
 
 # License
+
 MIT
