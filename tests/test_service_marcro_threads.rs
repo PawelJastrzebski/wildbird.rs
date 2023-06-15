@@ -6,19 +6,17 @@ mod tests {
     use std::sync::Arc;
     use wildbird::derive::*;
 
-    #[derive(Service)]
+    #[service(construct = "init")]
     struct HelloService {}
 
     impl HelloService {
         pub fn hello(&self, text: &str) {
             println!("hello {text}")
         }
-    }
 
-    #[ServiceConstruct]
-    fn hello_init() -> HelloService {
-        println!("init once");
-        HelloService {
+        fn init() -> HelloService {
+            println!("init once");
+            HelloService {}
         }
     }
 

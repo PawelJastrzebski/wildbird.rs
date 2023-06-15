@@ -5,13 +5,13 @@ mod tests {
     use std::sync::Arc;
     use wildbird::derive::*;
 
-    #[derive(Service)]
+    #[service]
     struct HelloService {
         test: Arc<Option<String>>,
         component_name: String,
     }
 
-    #[ServiceConstruct]
+    #[service(construct)]
     fn hello_init() -> HelloService {
         HelloService {
             test: Arc::new(Some("".to_string())),
@@ -25,11 +25,11 @@ mod tests {
         }
     }
 
-    #[derive(Service)]
+    #[service]
     struct WorldService {
     }
 
-    #[ServiceConstruct]
+    #[service(construct)]
     fn hello_init() -> WorldService {
         WorldService {}
     }

@@ -1,37 +1,21 @@
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
+use std::str::FromStr;
 use quote::{format_ident, quote, ToTokens};
 use syn::{DeriveInput, Data, Ident, parse_quote};
 use crate::models::parse_fields;
 
+pub fn impl_static(struct_name: &Ident, private: bool) -> TokenStream2 {
+    let visibility = if private { "" } else { "pub" };
+    let visibility_token = TokenStream2::from_str(visibility).expect("visibility token");
 
-pub fn impl_service_derive(ast: DeriveInput) -> TokenStream {
-    let struct_name = &ast.ident;
-    // println!("derive(Service) for {}", struct_name.to_string());
-
-    if let Data::Struct(data) = ast.data {
-        let _fields = parse_fields(&data.fields);
-    }
-
-    let static_impl = impl_static(struct_name);
-    let into_impl = impl_instance(struct_name);
-    let res = quote!(
-        #[automatically_derived]
-        #static_impl
-        #into_impl
-    );
-
-    res.into()
-}
-
-
-fn impl_static(struct_name: &Ident) ->  proc_macro2::TokenStream {
     quote! {
         #[allow(non_upper_case_globals)]
-        static #struct_name: wildbird::private::ServiceLazy<#struct_name> = wildbird::private::service_construct::<#struct_name>();
+         #visibility_token static #struct_name: wildbird::private::ServiceLazy<#struct_name> = wildbird::private::service_construct::<#struct_name>();
     }
 }
 
-fn impl_instance(struct_name: &Ident) -> proc_macro2::TokenStream {
+pub fn impl_instance(struct_name: &Ident) -> TokenStream2 {
     quote! {
          impl #struct_name {
             fn instance(&self) -> std::sync::Arc<#struct_name> {
@@ -43,7 +27,7 @@ fn impl_instance(struct_name: &Ident) -> proc_macro2::TokenStream {
 
 use syn::{ItemFn, ReturnType};
 
-pub fn impl_service_construct(fun: ItemFn) -> TokenStream {
+pub fn impl_service_construct(fun: ItemFn, body: &TokenStream2) -> TokenStream {
     match fun.sig.output {
         ReturnType::Default => {
             let function_name = fun.sig.ident.to_token_stream().to_string();
@@ -51,14 +35,7 @@ pub fn impl_service_construct(fun: ItemFn) -> TokenStream {
         }
         ReturnType::Type(_, t) => {
             let service_type = t.to_token_stream();
-            let body = fun.block.to_token_stream();
-
-            let gen = quote! {
-                    impl wildbird::Service for #service_type {
-                        type Service = #service_type;
-                        fn construct() -> Self::Service #body
-                    }
-                };
+            let gen = impl_service(body, &service_type);
 
             // println!("\
             //         Service: {service_type} \
@@ -67,6 +44,24 @@ pub fn impl_service_construct(fun: ItemFn) -> TokenStream {
             //     ", gen.to_token_stream().to_string());
 
             gen.into()
+        }
+    }
+}
+
+pub fn impl_service_body(method_name: String, strict_name: &Ident) -> TokenStream2 {
+    let construct_method_name = format_ident!("{}", method_name);
+    quote!(
+        {
+            #strict_name::#construct_method_name()
+        }
+    )
+}
+
+pub fn impl_service(body: &TokenStream2, service_type: &TokenStream2) -> TokenStream2 {
+    quote! {
+        impl wildbird::Service for #service_type {
+            type Service = #service_type;
+            fn construct() -> Self::Service #body
         }
     }
 }
