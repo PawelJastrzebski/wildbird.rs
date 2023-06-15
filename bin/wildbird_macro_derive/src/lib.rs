@@ -38,6 +38,7 @@ impl ServiceAttr {
     }
 }
 
+/// Service annotation
 #[proc_macro_attribute]
 pub fn service(attr: TokenStream, item: TokenStream) -> TokenStream {
     let source = proc_macro2::TokenStream::from(item.clone());
