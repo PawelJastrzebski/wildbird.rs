@@ -6,21 +6,21 @@ use syn::{ItemFn, ReturnType};
 use crate::_utils::*;
 
 #[derive(Debug)]
-pub struct LazyAttr {
+pub struct VarAttr {
     pub name: Option<String>,
 }
 
-impl LazyAttr {
-    pub fn parse_attr(attr: TokenStream) -> LazyAttr {
+impl VarAttr {
+    pub fn parse_attr(attr: TokenStream) -> VarAttr {
         let map = parse_attr_to_map(attr);
-        LazyAttr {
+        VarAttr {
             name: map.get("name").map(|v| { v.clone() })
         }
     }
 }
 
 #[inline]
-pub fn impl_lazy_static(fun: ItemFn, attribute: LazyAttr) -> TokenStream2 {
+pub fn impl_var_static(fun: ItemFn, attribute: VarAttr) -> TokenStream2 {
     let function_name = fun.sig.ident.to_token_stream();
     let const_name = attribute.name.unwrap_or(function_name.to_string().to_uppercase());
     match fun.sig.output {

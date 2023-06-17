@@ -11,12 +11,12 @@ mod lazy {
     use wildbird::derive::*;
     use wildbird::Lazy;
 
-    #[lazy]
+    #[var]
     fn app_path() -> String {
         std::env::var("PWD").expect("env:PWD not found")
     }
 
-    #[lazy(name = "PATH")]
+    #[var(name = "PATH")]
     fn app_path_2() -> String {
         std::env::var("PWD").expect("env:PWD not found")
     }

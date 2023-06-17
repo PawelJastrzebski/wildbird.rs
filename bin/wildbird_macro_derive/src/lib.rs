@@ -19,7 +19,7 @@ mod _utils;
 #[doc(hidden)]
 mod service_derive;
 #[doc(hidden)]
-mod lazy_derive;
+mod var_derive;
 
 /// Service annotation
 #[proc_macro_attribute]
@@ -59,11 +59,11 @@ pub fn service(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 /// Lazy annotation
 #[proc_macro_attribute]
-pub fn lazy(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn var(attr: TokenStream, item: TokenStream) -> TokenStream {
     if let Ok(lazy_fn) = syn::parse::<syn::ItemFn>(item.clone()) {
         let source = TokenStream2::from(item);
-        let attribute = lazy_derive::LazyAttr::parse_attr(attr.clone());
-        let static_impl = lazy_derive::impl_lazy_static(lazy_fn, attribute);
+        let attribute = var_derive::VarAttr::parse_attr(attr.clone());
+        let static_impl = var_derive::impl_var_static(lazy_fn, attribute);
 
         let result = quote! {
             #source
