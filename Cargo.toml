@@ -1,6 +1,6 @@
 [package]
 name = "wildbird"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 description = "Rust Framework"
 license = "MIT"
@@ -9,7 +9,7 @@ rust-version = "1.70"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.3" }
+wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.4" }
 
 [dev-dependencies]
 cargo-expand = "1.0.48"

@@ -57,7 +57,7 @@ pub fn service(attr: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
 
-/// Lazy annotation
+/// Var annotation
 #[proc_macro_attribute]
 pub fn var(attr: TokenStream, item: TokenStream) -> TokenStream {
     if let Ok(lazy_fn) = syn::parse::<syn::ItemFn>(item.clone()) {
