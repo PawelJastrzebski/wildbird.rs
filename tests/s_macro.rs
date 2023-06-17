@@ -1,7 +1,6 @@
 #![allow(dead_code, unused_imports, unused_variables, non_snake_case)]
 
-#[cfg(test)]
-mod tests {
+mod service {
     use std::sync::Arc;
     use wildbird::derive::*;
 
@@ -26,11 +25,10 @@ mod tests {
     }
 
     #[service]
-    struct WorldService {
-    }
+    struct WorldService {}
 
     #[service(construct)]
-    fn hello_init() -> WorldService {
+    fn hello_world() -> WorldService {
         WorldService {}
     }
 

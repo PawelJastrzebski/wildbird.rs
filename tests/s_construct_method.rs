@@ -1,7 +1,6 @@
 #![allow(dead_code, unused_imports, unused_variables, non_snake_case)]
 
-#[cfg(test)]
-mod tests {
+mod service {
     use std::io::{Read, Write};
     use std::sync::Arc;
     use wildbird::derive::*;
@@ -23,6 +22,9 @@ mod tests {
 
     #[test]
     fn should_derive_Service() {
+        use std::ops::Deref;
+        let x = HelloService.deref();
+        x.hello("0");
         HelloService.hello("1");
     }
 }

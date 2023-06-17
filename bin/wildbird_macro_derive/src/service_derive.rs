@@ -1,37 +1,54 @@
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
-use std::str::FromStr;
+use syn::__private::TokenStream2;
 use quote::{format_ident, quote, ToTokens};
-use syn::{DeriveInput, Data, Ident, parse_quote};
-use crate::models::parse_fields;
+use syn::{Ident, Visibility, ItemFn, ReturnType};
+use crate::_utils::*;
 
-pub fn impl_static(struct_name: &Ident, private: bool) -> TokenStream2 {
-    let visibility = if private { "" } else { "pub" };
-    let visibility_token = TokenStream2::from_str(visibility).expect("visibility token");
 
+#[derive(Debug)]
+pub struct ServiceAttr {
+    pub construct: String,
+    // pub private: bool,
+}
+
+impl ServiceAttr {
+    pub fn parse_attr(attr: TokenStream) -> ServiceAttr {
+        let map = parse_attr_to_map(attr);
+
+        ServiceAttr {
+            // private: map.get("private").unwrap_or(&"false".to_string()).parse().unwrap_or(false),
+            construct: map.get("construct").unwrap_or(&"".to_string()).clone(),
+        }
+    }
+}
+
+#[inline]
+pub fn impl_static(struct_name: &Ident, visibility: &Visibility) -> TokenStream2 {
+    let visibility_token = get_public_token(visibility);
     quote! {
         #[allow(non_upper_case_globals)]
          #visibility_token static #struct_name: wildbird::private::ServiceLazy<#struct_name> = wildbird::private::service_construct::<#struct_name>();
     }
 }
 
+#[inline]
 pub fn impl_instance(struct_name: &Ident) -> TokenStream2 {
     quote! {
          impl #struct_name {
             fn instance(&self) -> std::sync::Arc<#struct_name> {
-                #struct_name.clone()
+                use std::ops::Deref;
+                #struct_name.deref().clone()
             }
         }
     }
 }
 
-use syn::{ItemFn, ReturnType};
-
+#[inline]
 pub fn impl_service_construct(fun: ItemFn, body: &TokenStream2) -> TokenStream {
     match fun.sig.output {
         ReturnType::Default => {
             let function_name = fun.sig.ident.to_token_stream().to_string();
-            panic!("Specify function retrun type for: {function_name}()")
+            panic!("Specify function return type for: {function_name}()")
         }
         ReturnType::Type(_, t) => {
             let service_type = t.to_token_stream();
@@ -48,6 +65,7 @@ pub fn impl_service_construct(fun: ItemFn, body: &TokenStream2) -> TokenStream {
     }
 }
 
+#[inline]
 pub fn impl_service_body(method_name: String, strict_name: &Ident) -> TokenStream2 {
     let construct_method_name = format_ident!("{}", method_name);
     quote!(
@@ -57,6 +75,7 @@ pub fn impl_service_body(method_name: String, strict_name: &Ident) -> TokenStrea
     )
 }
 
+#[inline]
 pub fn impl_service(body: &TokenStream2, service_type: &TokenStream2) -> TokenStream2 {
     quote! {
         impl wildbird::Service for #service_type {

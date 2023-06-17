@@ -156,3 +156,32 @@ pub fn parse_fields(fileds: &Fields) -> Vec<WField> {
     //
     // result
 }
+
+#[cfg(test)]
+mod parser_tests {
+    use proc_macro::TokenStream;
+
+    use quote::*;
+    use syn::*;
+
+    use super::parse_fields;
+    use crate::_test_utils::*;
+    use crate::q;
+
+    #[test]
+    fn should_parse_fields() {
+        let r: ItemStruct = q!(
+                struct Test {
+                    name: String,
+                    opt: Option<u32>
+                }
+        );
+
+        println!("{:?}", &r.to_token_stream());
+        let parsed = DeriveInput::from(r);
+
+        let Data::Struct(data) = parsed.data else { panic!("invalid type") };
+        let fields = parse_fields(&data.fields);
+        println!("{:#?}", fields)
+    }
+}

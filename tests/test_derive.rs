@@ -1,9 +1,8 @@
 #[cfg(test)]
 #[allow(dead_code)]
 /// Only for debugging
-///
 /// use:  cargo expand --test test_derive
-mod tests {
+mod debug {
     use std::sync::Arc;
 
     #[derive(Debug)]
@@ -17,4 +16,5 @@ mod tests {
             println!("Hello");
         }
     }
+
 }
