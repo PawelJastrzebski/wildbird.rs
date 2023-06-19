@@ -5,7 +5,6 @@ use quote::{format_ident, quote, ToTokens};
 use syn::{ItemFn, ReturnType};
 use crate::_utils::*;
 
-#[derive(Debug)]
 pub struct VarAttr {
     pub name: Option<String>,
 }
@@ -33,8 +32,7 @@ fn impl_static(
     }
 }
 
-#[inline]
-pub fn impl_var_static(fun: ItemFn, attribute: VarAttr) -> TokenStream2 {
+fn _impl_var_static(fun: ItemFn, attribute: VarAttr) -> TokenStream2 {
     let is_async = fun.sig.asyncness.is_some();
     let function_name = fun.sig.ident.to_token_stream();
     let const_name = attribute.name.unwrap_or(function_name.to_string().to_uppercase());
@@ -56,11 +54,27 @@ pub fn impl_var_static(fun: ItemFn, attribute: VarAttr) -> TokenStream2 {
                     }
                     #static_impl
                 )
-
             } else {
                 impl_static(function_name, const_name, &return_type, visibility_token)
             }
         }
     }
+}
+
+pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
+    if let Ok(lazy_fn) = syn::parse::<syn::ItemFn>(item.clone()) {
+        let source = TokenStream2::from(item);
+        let attribute = VarAttr::parse_attr(attr.clone());
+        let static_impl = _impl_var_static(lazy_fn, attribute);
+
+        let res = quote! {
+            #source
+            #[automatically_derived]
+            #static_impl
+        };
+        return res.into();
+    };
+
+    item
 }
 

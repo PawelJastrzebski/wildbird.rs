@@ -34,13 +34,13 @@ impl HelloService {
         }
     }
 
-    fn sey_hello(&self) {
+    fn say_hello(&self) {
         println!("Hello! 👋")
     }
 }
 
 fn main() {
-    HelloService.sey_hello();
+    HelloService.say_hello();
 }
 ```
 - Async init

@@ -1,6 +1,7 @@
 use syn::parse::Parse;
 use syn::__private::TokenStream2;
 
+#[allow(dead_code)]
 #[cfg(test)]
 pub fn parse_tokens<T>(q: TokenStream2) -> T
     where T: Parse

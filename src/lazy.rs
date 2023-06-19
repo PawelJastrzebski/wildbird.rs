@@ -9,7 +9,7 @@ pub struct Lazy<T> {
 }
 
 impl<T> Deref for Lazy<T> {
-    type Target = Arc<T>;
+    type Target = T;
 
     fn deref(&self) -> &Self::Target {
         self.lock.get_or_init(|| Arc::new((self.init_fn)()))
@@ -27,13 +27,13 @@ impl<T> Clone for Lazy<T> {
 
 impl<T: Display> Display for Lazy<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.instance().deref().fmt(f)
+        Display::fmt(&**self, f)
     }
 }
 
 impl<T: Debug> Debug for Lazy<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.instance().deref().fmt(f)
+        Debug::fmt(&**self, f)
     }
 }
 
