@@ -1,8 +1,6 @@
-#![allow(dead_code, unused_imports, unused_variables, non_snake_case)]
+#![allow(dead_code, unused_variables, non_snake_case)]
 
 mod service {
-    use std::io::{Read, Write};
-    use std::sync::Arc;
     use wildbird::derive::*;
 
     #[service(construct = "init")]

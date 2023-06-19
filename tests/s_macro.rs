@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_imports, unused_variables, non_snake_case)]
 
+/// use:  cargo expand --test var_macro_async
 mod service {
     use std::sync::Arc;
     use wildbird::derive::*;

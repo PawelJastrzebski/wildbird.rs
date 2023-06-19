@@ -21,8 +21,14 @@ pub fn service(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attribute = service_derive::ServiceAttr::parse_attr(attr.clone());
 
     if let Ok(construct_fn) = syn::parse::<syn::ItemFn>(item.clone()) {
-        let body = construct_fn.block.to_token_stream();
-        return service_derive::impl_service_construct(construct_fn, &body);
+        let impl_service = service_derive::impl_service_construct(construct_fn);
+
+        let res = quote!(
+            #source
+            #[automatically_derived]
+            #impl_service
+        );
+        return res.into();
     };
 
     if let Ok(service_struct) = syn::parse::<ItemStruct>(item.clone()) {
@@ -32,7 +38,9 @@ pub fn service(attr: TokenStream, item: TokenStream) -> TokenStream {
         let mut impl_service = TokenStream2::from_str("").unwrap();
 
         if !attribute.construct.is_empty() {
-            let body = service_derive::impl_service_body(attribute.construct, &strict_name);
+            let is_async = attribute.construct.contains("async");
+            let method_name = attribute.construct.replace("async", "").trim().to_string();
+            let body = service_derive::impl_service_body(method_name, &strict_name, is_async);
             impl_service = service_derive::impl_service(&body, &strict_name.to_token_stream());
         }
 

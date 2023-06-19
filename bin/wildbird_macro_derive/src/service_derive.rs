@@ -40,27 +40,41 @@ pub fn impl_instance(struct_name: &Ident) -> TokenStream2 {
 }
 
 #[inline]
-pub fn impl_service_construct(fun: ItemFn, body: &TokenStream2) -> TokenStream {
+pub fn impl_service_construct(fun: ItemFn) -> TokenStream2 {
+    let is_async = fun.sig.asyncness.is_some();
+    let function_name = fun.sig.ident.to_token_stream();
     match fun.sig.output {
         ReturnType::Default => {
-            let function_name = fun.sig.ident.to_token_stream().to_string();
-            panic!("Specify function return type for: {}()", function_name)
+            panic!("Specify function return type for: {}()", function_name.to_string())
         }
         ReturnType::Type(_, t) => {
             let service_type = t.to_token_stream();
-            impl_service(body, &service_type).into()
+            let body = if is_async {
+                quote! {
+                    { wildbird::private::block(async { #function_name().await }) }
+                }
+            } else {
+                quote! {
+                    { #function_name() }
+                }
+            };
+            impl_service(&body, &service_type)
         }
     }
 }
 
 #[inline]
-pub fn impl_service_body(method_name: String, strict_name: &Ident) -> TokenStream2 {
+pub fn impl_service_body(method_name: String, strict_name: &Ident, is_async: bool) -> TokenStream2 {
     let construct_method_name = format_ident!("{}", method_name);
-    quote!(
-        {
-            #strict_name::#construct_method_name()
+    if is_async {
+        quote! {
+            { wildbird::private::block(async { #strict_name::#construct_method_name().await }) }
         }
-    )
+    } else {
+        quote! {
+            { #strict_name::#construct_method_name() }
+        }
+    }
 }
 
 #[inline]

@@ -43,6 +43,31 @@ fn main() {
     HelloService.sey_hello();
 }
 ```
+Async init
+```rust
+use wildbird::derive::*;
+
+#[service(construct = "async init")]
+struct AsyncService {
+    component_name: String,
+}
+
+impl AsyncService {
+    async fn init() -> AsyncService {
+        AsyncService {
+            component_name: "Tokyo 🗼".to_string(),
+        }
+    }
+
+    fn sey_hello(&self) {
+        println!("Hello! 👋")
+    }
+}
+
+fn main() {
+    AsyncService.sey_hello();
+}
+```
 
 <br />
 
@@ -57,7 +82,7 @@ struct HelloService {
 
 // Impl Service trait construct() 
 #[service(construct)]
-fn hello_init() -> HelloService {
+async fn hello_init() -> HelloService {
     HelloService {
         component_name: "Hello 🚀".to_string(),
     }
@@ -65,9 +90,7 @@ fn hello_init() -> HelloService {
 ```
 
 # Globals
-
 Create global variable
-
 ```rust
 use wildbird::derive::*;
 
@@ -81,8 +104,7 @@ fn main() {
 }
 ```
 
-<br />
-
+- Custom name
 ```rust
 use wildbird::derive::*;
 
@@ -93,6 +115,23 @@ fn custom_name() -> String {
 
 fn main() {
     println!("Home: {}", HOME);
+}
+```
+
+- Async init
+```rust
+use std::time::Duration;
+use wildbird::derive::*;
+use std::thread::sleep;
+
+#[var(name = "USERS")]
+async fn http_fetch_users() -> String {
+    sleep(Duration::from_millis(200));
+    String::from("⏱️")
+}
+
+fn main() {
+    println!("Users: {}", USERS);
 }
 ```
 

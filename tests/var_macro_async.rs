@@ -1,14 +1,9 @@
-#![allow(dead_code, unused_imports, unused_variables, non_snake_case)]
+#![allow(dead_code, unused_variables, non_snake_case)]
 
 /// use:  cargo expand --test var_macro_async
 mod lazy {
-    use std::io::{Read, Write};
-    use std::ops::Deref;
-    use std::sync::Arc;
     use std::time::Duration;
-
     use wildbird::derive::*;
-    use wildbird::Lazy;
 
     #[var(name = "DB")]
     async fn connect_db() -> String {

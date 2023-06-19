@@ -1,27 +1,27 @@
 #![allow(dead_code, unused_variables, non_snake_case)]
 
 mod service {
+    use std::thread::sleep;
+    use std::time::Duration;
     use wildbird::derive::*;
 
-    #[service(construct = "hello_init")]
+    #[service(construct = "async hello_init")]
     struct HelloService {}
 
     impl HelloService {
-        fn hello_init() -> HelloService {
+        async fn hello_init() -> HelloService {
+            sleep(Duration::from_millis(200));
             println!("init once");
             HelloService {}
         }
 
-        pub fn hello(&self, text: &str) {
-            println!("hello {text}")
+        pub fn hello(&self) {
+            println!("hello !!")
         }
     }
 
     #[test]
     fn should_derive_Service() {
-        use std::ops::Deref;
-        let x = HelloService.deref();
-        x.hello("0");
-        HelloService.hello("1");
+        HelloService.hello();
     }
 }
