@@ -11,16 +11,16 @@ mod lazy {
     }
 
     #[var(name = "PATH")]
-    fn app_path_2() -> String {
-        std::env::var("PWD").expect("env:PWD not found")
+    fn app_path_2() -> Option<u32> {
+        Some(32)
     }
-
 
     #[test]
     pub fn should_derive_lazy() {
         let path = APP_PATH.clone();
         println!("app_path: {path}");
         println!("APP_PATH: {APP_PATH}");
-        println!("PATH: {PATH}");
+        println!("Number: {:?}", PATH);
+        println!("Number: {}", PATH.unwrap());
     }
 }

@@ -23,7 +23,7 @@ impl VarAttr {
 fn impl_static(
     function_name: TokenStream2,
     const_name: String,
-    return_type: TokenStream2,
+    return_type: &TokenStream2,
     visibility_token: TokenStream2,
 ) -> TokenStream2 {
     let static_name = TokenStream2::from_str(&*const_name).expect("Const name");
@@ -48,17 +48,17 @@ pub fn impl_var_static(fun: ItemFn, attribute: VarAttr) -> TokenStream2 {
 
             if is_async {
                 let init_function_name = format_ident!("_{}_init", function_name.to_string());
-                let static_impl = impl_static(init_function_name.to_token_stream(), const_name, return_type, visibility_token);
+                let static_impl = impl_static(init_function_name.to_token_stream(), const_name, &return_type, visibility_token);
 
                 quote!(
-                    fn #init_function_name() -> String {
+                    fn #init_function_name() -> #return_type {
                         wildbird::private::block(async { #function_name().await })
                     }
                     #static_impl
                 )
 
             } else {
-                impl_static(function_name, const_name, return_type, visibility_token)
+                impl_static(function_name, const_name, &return_type, visibility_token)
             }
         }
     }
