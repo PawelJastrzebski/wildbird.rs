@@ -1,8 +1,3 @@
-#![allow(non_snake_case)]
-#![feature(log_syntax, proc_macro_quote)]
-extern crate core;
-extern crate proc_macro;
-
 use proc_macro::TokenStream;
 use std::str::FromStr;
 
@@ -12,8 +7,6 @@ use syn::__private::TokenStream2;
 
 #[cfg(test)]
 mod _test_utils;
-#[doc(hidden)]
-mod _models;
 #[doc(hidden)]
 mod _utils;
 #[doc(hidden)]
@@ -50,7 +43,6 @@ pub fn service(attr: TokenStream, item: TokenStream) -> TokenStream {
             #impl_service
             #into_impl
         );
-
         return res.into();
     };
 
@@ -65,13 +57,12 @@ pub fn var(attr: TokenStream, item: TokenStream) -> TokenStream {
         let attribute = var_derive::VarAttr::parse_attr(attr.clone());
         let static_impl = var_derive::impl_var_static(lazy_fn, attribute);
 
-        let result = quote! {
+        let res = quote! {
             #source
             #[automatically_derived]
             #static_impl
         };
-
-        return result.into();
+        return res.into();
     };
 
     item

@@ -4,19 +4,15 @@ use quote::{format_ident, quote, ToTokens};
 use syn::{Ident, Visibility, ItemFn, ReturnType};
 use crate::_utils::*;
 
-
 #[derive(Debug)]
 pub struct ServiceAttr {
     pub construct: String,
-    // pub private: bool,
 }
 
 impl ServiceAttr {
     pub fn parse_attr(attr: TokenStream) -> ServiceAttr {
         let map = parse_attr_to_map(attr);
-
         ServiceAttr {
-            // private: map.get("private").unwrap_or(&"false".to_string()).parse().unwrap_or(false),
             construct: map.get("construct").unwrap_or(&"".to_string()).clone(),
         }
     }
@@ -48,19 +44,11 @@ pub fn impl_service_construct(fun: ItemFn, body: &TokenStream2) -> TokenStream {
     match fun.sig.output {
         ReturnType::Default => {
             let function_name = fun.sig.ident.to_token_stream().to_string();
-            panic!("Specify function return type for: {function_name}()")
+            panic!("Specify function return type for: {}()", function_name)
         }
         ReturnType::Type(_, t) => {
             let service_type = t.to_token_stream();
-            let gen = impl_service(body, &service_type);
-
-            // println!("\
-            //         Service: {service_type} \
-            //         body: {body}\
-            //         res: {}
-            //     ", gen.to_token_stream().to_string());
-
-            gen.into()
+            impl_service(body, &service_type).into()
         }
     }
 }
