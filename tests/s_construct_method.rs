@@ -1,7 +1,6 @@
 #![allow(dead_code, unused_variables, non_snake_case)]
 
 mod service {
-    use std::ops::Deref;
     use wildbird::derive::*;
 
     #[service(construct = "hello_init")]
@@ -20,8 +19,8 @@ mod service {
 
     #[test]
     fn should_derive_Service() {
-        let drf: &HelloService = HelloService.deref();
-        let drf: wildbird::Lazy<HelloService> = HelloService.clone();
+        let drf: &HelloService = HelloService.to_ref();
+        let drf: wildbird::Lazy<HelloService> = HelloService.clone_lazy();
         let drf: std::sync::Arc<HelloService> = HelloService.instance();
         HelloService.hello("1");
         drf.hello("0");

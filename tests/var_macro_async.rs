@@ -2,7 +2,7 @@
 
 /// use:  cargo expand --test var_macro_async
 mod lazy {
-    use std::{time::Duration, ops::Deref};
+    use std::time::Duration;
     use wildbird::derive::*;
 
     #[var(name = "DB")]
@@ -26,10 +26,16 @@ mod lazy {
 
     #[test]
     pub fn test_deref_and_clone() {
-        println!("DB: {}", DB);
-        let deref: &String = DB.deref();
-        let clone: wildbird::Lazy<String>= DB.clone();
-        assert_eq!(deref, clone.deref());
+        let get: &String = DB.to_ref();
+
+        let clone: wildbird::Lazy<String>= DB.clone_lazy();
+        assert_eq!(get, clone.to_ref());
+
+        let deref: &String = &*DB;
+        assert_eq!(get, deref);
+
+        let reff: &String = DB.to_ref();
+        assert_eq!(get, reff);
     }
 
     #[tokio::test]

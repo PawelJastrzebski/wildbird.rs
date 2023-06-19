@@ -1,6 +1,6 @@
 use std::fmt::{self, Debug, Display, Formatter};
-use std::sync::{Arc, OnceLock};
 use std::ops::Deref;
+use std::sync::{Arc, OnceLock};
 
 #[doc(hidden)]
 pub struct Lazy<T> {
@@ -12,16 +12,7 @@ impl<T> Deref for Lazy<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.lock.get_or_init(|| Arc::new((self.init_fn)()))
-    }
-}
-
-impl<T> Clone for Lazy<T> {
-    fn clone(&self) -> Self {
-        Lazy {
-            init_fn: self.init_fn,
-            lock: OnceLock::from(self.instance()),
-        }
+        self._get().as_ref()
     }
 }
 
@@ -37,16 +28,30 @@ impl<T: Debug> Debug for Lazy<T> {
     }
 }
 
-impl<T> Lazy<T>
-{
-    pub const fn new(fun: fn() -> T) -> Lazy<T> {
+impl<T> Lazy<T> {
+    pub const fn new(init: fn() -> T) -> Lazy<T> {
         Lazy {
             lock: OnceLock::new(),
-            init_fn: fun,
+            init_fn: init,
+        }
+    }
+
+    fn _get(&self) -> &Arc<T> {
+        self.lock.get_or_init(|| Arc::new((self.init_fn)()))
+    }
+
+    pub fn clone_lazy(&self) -> Self {
+        Lazy {
+            lock: OnceLock::from(self.instance()),
+            init_fn: self.init_fn,
         }
     }
 
     pub fn instance(&self) -> Arc<T> {
-        self.lock.get_or_init(|| Arc::new((self.init_fn)())).clone()
+        self._get().clone()
+    }
+
+    pub fn to_ref(&self) -> &T {
+        &self._get().as_ref()
     }
 }
