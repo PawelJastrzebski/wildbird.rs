@@ -1,13 +1,13 @@
 [package]
 name = "wildbird"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 description = "Rust Framework"
 license = "MIT"
 rust-version = "1.70"
 
 [dependencies]
-wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.4" }
+wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.5" }
 futures-lite = "1.13.0"
 
 [dev-dependencies]

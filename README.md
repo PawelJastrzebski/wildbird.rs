@@ -43,33 +43,28 @@ fn main() {
     HelloService.sey_hello();
 }
 ```
-Async init
+- Async init
 ```rust
 use wildbird::derive::*;
 
 #[service(construct = "async init")]
-struct AsyncService {
-    component_name: String,
-}
+struct AsyncService {}
 
 impl AsyncService {
     async fn init() -> AsyncService {
-        AsyncService {
-            component_name: "Tokyo 🗼".to_string(),
-        }
+        AsyncService {}
     }
 
-    fn sey_hello(&self) {
-        println!("Hello! 👋")
+    fn greeting(&self) {
+        println!("Hello 🗼")
     }
 }
 
 fn main() {
-    AsyncService.sey_hello();
+    AsyncService.greeting();
 }
 ```
-
-<br />
+- Async init functional
 
 ```rust
 use wildbird::derive::*;
@@ -90,7 +85,7 @@ async fn hello_init() -> HelloService {
 ```
 
 # Globals
-Create global variable
+Create global 
 ```rust
 use wildbird::derive::*;
 
