@@ -3,10 +3,7 @@ use std::ops::Deref;
 use std::sync::{Arc, OnceLock};
 
 #[doc(hidden)]
-pub struct Lazy<T> {
-    lock: OnceLock<Arc<T>>,
-    init_fn: fn() -> T,
-}
+pub struct Lazy<T>(OnceLock<Arc<T>>, fn() -> T);
 
 impl<T> Deref for Lazy<T> {
     type Target = T;
@@ -30,21 +27,15 @@ impl<T: Debug> Debug for Lazy<T> {
 
 impl<T> Lazy<T> {
     pub const fn new(init: fn() -> T) -> Lazy<T> {
-        Lazy {
-            lock: OnceLock::new(),
-            init_fn: init,
-        }
+        Lazy(OnceLock::new(), init)
     }
 
     fn _get(&self) -> &Arc<T> {
-        self.lock.get_or_init(|| Arc::new((self.init_fn)()))
+        self.0.get_or_init(|| Arc::new((self.1)()))
     }
 
     pub fn clone_lazy(&self) -> Self {
-        Lazy {
-            lock: OnceLock::from(self.instance()),
-            init_fn: self.init_fn,
-        }
+        Lazy(OnceLock::from(self.instance()), self.1)
     }
 
     pub fn instance(&self) -> Arc<T> {

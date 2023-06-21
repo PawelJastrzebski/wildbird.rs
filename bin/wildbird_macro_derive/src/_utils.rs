@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use syn::__private::TokenStream2;
 use std::collections::HashMap;
 use std::str::FromStr;
-use quote::ToTokens;
+use quote::{quote_spanned, ToTokens};
 use syn::Visibility;
 
 pub fn is_public(vis: &Visibility) -> bool {
@@ -28,4 +28,8 @@ pub fn parse_attr_to_map(attr: TokenStream) -> HashMap<String, String> {
         map.insert(key.trim().to_string(), value.trim().replace("\"", "").to_string());
     }
     map
+}
+
+pub fn error(span: syn::__private::Span, message: String) -> TokenStream2 {
+    return quote_spanned!( span => compile_error!(#message); );
 }

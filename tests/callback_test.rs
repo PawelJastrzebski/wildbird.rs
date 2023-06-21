@@ -1,7 +1,10 @@
-#![allow(dead_code, unused_variables, non_snake_case)]
+#![allow(dead_code, non_snake_case)]
+
 use std::time::Duration;
 use wildbird::*;
+use wildbird::derive::*;
 
+/// use:  cargo expand --test callback_test
 mod callback {
     use super::*;
 
@@ -10,19 +13,21 @@ mod callback {
         String::from(format!("{}", "data"))
     }
 
-    async fn init(callback: Callback<String>) -> () {
+    #[var]
+    async fn callback(callback1: Callback<Option<String>>) {
         let data = db_call().await;
-        callback.call(data);
+        callback1.call(Some(data));
     }
 
-    fn init_callback() -> String {
-         wildbird::private::block_callback(init)
+    #[var]
+    async fn number(cal: Callback<i32>) {
+        cal.call(12);
+        cal.call(13);
     }
-
-    static INIT_LAZY: wildbird::Lazy<String> = wildbird::private::lazy_construct(init_callback);
 
     #[test]
     pub fn should_derive_lazy() {
-        print!("Result: {INIT_LAZY}");
+        println!("Option: {:?}", CALLBACK);
+        println!("Number: {:?}", NUMBER);
     }
 }

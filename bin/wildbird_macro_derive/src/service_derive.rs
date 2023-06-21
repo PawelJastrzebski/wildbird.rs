@@ -1,8 +1,7 @@
 use proc_macro::TokenStream;
 use std::str::FromStr;
-use syn::__private::TokenStream2;
 use quote::{format_ident, quote, ToTokens};
-use syn::{Ident, Visibility, ItemFn, ReturnType, ItemStruct};
+use syn::{Ident, Visibility, ItemFn, ReturnType, ItemStruct, __private::TokenStream2};
 use crate::_utils::*;
 
 struct ServiceAttr {

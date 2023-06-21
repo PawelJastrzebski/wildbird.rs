@@ -1,6 +1,5 @@
-use super::Service;
-use crate::Lazy;
-use crate::Callback;
+use std::future::Future;
+use crate::{Service, Lazy, Callback};
 
 #[doc(hidden)]
 pub type ServiceLazy<T> = Lazy<T>;
@@ -19,10 +18,10 @@ pub const fn lazy_construct<T>(value: fn() -> T) -> Lazy<T> {
 
 #[inline]
 #[doc(hidden)]
-pub fn block_callback<D, F>(future: fn(Callback<D>) -> F) -> D
+pub fn block_callback<T, F, O>(future: fn(Callback<T>) -> F) -> T
     where
-        D: Send + Sync + 'static,
-        F: std::future::Future<Output=()> + 'static,
+        T: Send + Sync + 'static,
+        F: Future<Output=O> + 'static,
 {
     let (tx, rx) = std::sync::mpsc::sync_channel(0);
     std::thread::spawn(move || {
@@ -30,11 +29,19 @@ pub fn block_callback<D, F>(future: fn(Callback<D>) -> F) -> D
             future(Callback::new(tx))
         );
     });
-    rx.recv().unwrap()
+    rx.recv().expect("\nCallback<T>.call(T) was not called\n")
 }
 
 #[inline]
 #[doc(hidden)]
-pub fn block<T>(future: impl std::future::Future<Output=T>) -> T {
+pub fn block<T>(future: impl Future<Output=T>) -> T {
     futures_lite::future::block_on(future)
+}
+
+#[inline]
+#[doc(hidden)]
+pub fn block_fn<D, F>(future: fn() -> F) -> D
+    where F: Future<Output=D>
+{
+    futures_lite::future::block_on(future())
 }

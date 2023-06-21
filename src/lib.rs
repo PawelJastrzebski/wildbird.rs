@@ -6,8 +6,7 @@ mod callback;
 /// Macro System
 pub extern crate wildbird_macro_derive as derive;
 
-pub use self::lazy::Lazy;
-pub use self::callback::Callback;
+pub use self::{lazy::Lazy, callback::Callback};
 
 /// Private Module
 /// > **Don't use in your code directly**
