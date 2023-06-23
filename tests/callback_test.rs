@@ -2,10 +2,10 @@
 
 use std::time::Duration;
 use wildbird::*;
-use wildbird::derive::*;
+use wildbird::derive::var;
 
 /// use:  cargo expand --test callback_test
-mod callback {
+mod callback_tokio {
     use super::*;
 
     async fn db_call() -> String {
@@ -14,9 +14,9 @@ mod callback {
     }
 
     #[var]
-    async fn callback(callback1: Callback<Option<String>>) {
+    async fn callback(call: Callback<Option<String>>) {
         let data = db_call().await;
-        callback1.call(Some(data));
+        call.call(Some(data));
     }
 
     #[var]
@@ -26,7 +26,15 @@ mod callback {
     }
 
     #[test]
+    #[cfg(not(feature = "tokio"))]
     pub fn should_derive_lazy() {
+        println!("Option: {:?}", CALLBACK);
+        println!("Number: {:?}", NUMBER);
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "tokio")]
+    pub async fn should_derive_lazy() {
         println!("Option: {:?}", CALLBACK);
         println!("Number: {:?}", NUMBER);
     }

@@ -22,7 +22,7 @@ fn _impl_static(struct_name: &Ident, visibility: &Visibility) -> TokenStream2 {
     let visibility_token = get_public_token(visibility);
     quote! {
         #[allow(non_upper_case_globals)]
-         #visibility_token static #struct_name: wildbird::private::ServiceLazy<#struct_name> = wildbird::private::service_construct::<#struct_name>();
+         #visibility_token static #struct_name: wildbird::Lazy<#struct_name> = wildbird::private::service_construct::<#struct_name>();
     }
 }
 

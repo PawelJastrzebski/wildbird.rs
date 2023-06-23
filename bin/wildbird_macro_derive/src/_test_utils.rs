@@ -1,11 +1,9 @@
-use syn::parse::Parse;
 use syn::__private::TokenStream2;
+use syn::parse::Parse;
 
 #[allow(dead_code)]
 #[cfg(test)]
-pub fn parse_tokens<T>(q: TokenStream2) -> T
-    where T: Parse
-{
+pub fn parse_tokens<T: Parse>(q: TokenStream2) -> T {
     let str = q.to_string();
     syn::parse_str(&str).expect("valid TokenString syn parse")
 }
@@ -14,6 +12,6 @@ pub fn parse_tokens<T>(q: TokenStream2) -> T
 #[macro_export]
 macro_rules! q {
         ($($tt:tt)*) => {{
-            parse_tokens(quote!($($tt)*))
+            crate::_test_utils::parse_tokens(quote!($($tt)*))
         }};
 }

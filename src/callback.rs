@@ -1,6 +1,7 @@
 use std::sync::mpsc::SyncSender;
 
 // Callback for lazy initialization
+#[doc(hidden)]
 pub struct Callback<T>(SyncSender<T>);
 
 impl<T> Callback<T> {

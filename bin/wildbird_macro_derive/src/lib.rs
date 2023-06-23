@@ -1,10 +1,8 @@
-#![feature(log_syntax)]
+#![doc = include_str!("../README.md")]
+
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-
-#[cfg(test)]
-mod _test_utils;
 #[doc(hidden)]
 mod _utils;
 #[doc(hidden)]
@@ -24,3 +22,5 @@ pub fn var(attr: TokenStream, item: TokenStream) -> TokenStream {
     var_derive::main(attr, item)
 }
 
+#[cfg(test)]
+mod _test_utils;

@@ -1,13 +1,15 @@
+use crate::{Callback, Lazy, Service};
 use std::future::Future;
-use crate::{Service, Lazy, Callback};
 
-#[doc(hidden)]
-pub type ServiceLazy<T> = Lazy<T>;
+#[cfg(feature = "tokio")]
+use tokio::task::spawn_blocking as spawn_blocking;
+#[cfg(not(feature = "tokio"))]
+use std::thread::spawn as spawn_blocking;
 
 #[inline]
 #[doc(hidden)]
-pub const fn service_construct<S: Service>() -> ServiceLazy<S::Service> {
-    ServiceLazy::new(|| S::construct())
+pub const fn service_construct<S: Service>() -> Lazy<S::Service> {
+    Lazy::new(|| S::construct())
 }
 
 #[inline]
@@ -19,16 +21,11 @@ pub const fn lazy_construct<T>(value: fn() -> T) -> Lazy<T> {
 #[inline]
 #[doc(hidden)]
 pub fn block_callback<T, F, O>(future: fn(Callback<T>) -> F) -> T
-    where
-        T: Send + Sync + 'static,
-        F: Future<Output=O> + 'static,
+    where T: Send + 'static, F: Future<Output=O> + 'static,
 {
-    let (tx, rx) = std::sync::mpsc::sync_channel(0);
-    std::thread::spawn(move || {
-        futures_lite::future::block_on(
-            future(Callback::new(tx))
-        );
-    });
+    let (tx, rx) = std::sync::mpsc::sync_channel(1);
+    let callback = Callback::new(tx);
+    spawn_blocking(move || { block(future(callback)); });
     rx.recv().expect("\nCallback<T>.call(T) was not called\n")
 }
 
@@ -40,8 +37,6 @@ pub fn block<T>(future: impl Future<Output=T>) -> T {
 
 #[inline]
 #[doc(hidden)]
-pub fn block_fn<D, F>(future: fn() -> F) -> D
-    where F: Future<Output=D>
-{
-    futures_lite::future::block_on(future())
+pub fn block_fn<D, F: Future<Output=D>>(future: fn() -> F) -> D {
+    block(future())
 }
