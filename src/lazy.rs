@@ -15,13 +15,19 @@ impl<T> Deref for Lazy<T> {
 
 impl<T: Display> Display for Lazy<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Display::fmt(&**self, f)
+        if self._get_opt().is_some() {
+            return Display::fmt(self.to_ref(), f);
+        }
+        Display::fmt("(Not initialized)", f)
     }
 }
 
 impl<T: Debug> Debug for Lazy<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Debug::fmt(&**self, f)
+        if self._get_opt().is_some() {
+            return Debug::fmt(self.to_ref(), f);
+        }
+        Debug::fmt("(Not initialized) - use to_ref()", f)
     }
 }
 
@@ -32,6 +38,10 @@ impl<T> Lazy<T> {
 
     fn _get(&self) -> &Arc<T> {
         self.0.get_or_init(|| Arc::new((self.1)()))
+    }
+
+    fn _get_opt(&self) -> Option<&Arc<T>> {
+        self.0.get()
     }
 
     pub fn clone_lazy(&self) -> Self {

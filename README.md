@@ -95,7 +95,7 @@ pub fn my_name() -> String {
 }
 
 fn main() {
-    println!("Hello from 🇵🇱, {}", MY_NAME);
+    println!("Hello from 🇵🇱, {}", &*MY_NAME);
 }
 ```
 
@@ -109,7 +109,7 @@ fn custom_name() -> String {
 }
 
 fn main() {
-    println!("Home: {}", HOME);
+    println!("Home: {}", &*HOME);
 }
 ```
 
@@ -124,9 +124,19 @@ async fn http_fetch_users() -> String {
     sleep(Duration::from_millis(200));
     String::from("⏱️")
 }
+```
 
-fn main() {
-    println!("Users: {}", USERS);
+- callback init
+```rust
+use std::time::Duration;
+use wildbird::derive::*;
+use std::thread::sleep;
+
+#[var(name = "PORT")]
+async fn init_http_service(callback: wildbird::Callback<String>) {
+    sleep(Duration::from_millis(200));
+    println!("Server started");
+    callback.call("8080".to_string());
 }
 ```
 
