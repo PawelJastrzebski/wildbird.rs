@@ -1,10 +1,17 @@
 [package]
 name = "wildbird_macro_derive"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 description = "Rust Framework | Macro System"
 license = "MIT"
 rust-version = "1.70"
+categories = [ "accessibility" ]
+keywords = [
+    "lazy",
+    "static",
+    "async",
+    "framework"
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
