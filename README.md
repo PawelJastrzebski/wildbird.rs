@@ -13,25 +13,6 @@
 - [Authors](#created-by)
 - [License](#license)
 
-# Get started
-
-##### Add dependency
-Cargo.toml
-```toml
-[dependencies]
-wildbird = "^0.0.8"
-```
-
-##### Feature flags
-Optional features
-
-- *tokio* - Use to support tokio async environment
-```toml
-[dependencies]
-tokio = "1.28.2"
-wildbird = {version = "^0.0.8", features = ["tokio"]}
-```
-
 # Services
 
 Create service instance (Singleton) in one step
@@ -102,6 +83,7 @@ async fn hello_init() -> HelloService {
     }
 }
 ```
+<br />
 
 # Globals
 Create global 
@@ -158,6 +140,27 @@ async fn init_http_service(callback: wildbird::Callback<String>) {
     callback.call("8080".to_string());
 }
 ```
+<br />
+
+# Get started
+
+##### Add dependency
+Cargo.toml
+```toml
+[dependencies]
+wildbird = "^0.0.8"
+```
+
+##### Feature flags
+Optional features
+
+- *tokio* - Use to support tokio async environment
+```toml
+[dependencies]
+tokio = "1.28.2"
+wildbird = {version = "^0.0.8", features = ["tokio"]}
+```
+<br />
 
 # Created By
 
