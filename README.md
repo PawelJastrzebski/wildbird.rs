@@ -7,11 +7,30 @@
 </h1>
 
 # Table of contents
-
+- [Get Started](#get-started)
 - [Services](#services)
 - [Globals](#globals)
 - [Authors](#created-by)
 - [License](#license)
+
+# Get started
+
+##### Add dependency
+Cargo.toml
+```toml
+[dependencies]
+wildbird = "^0.0.8"
+```
+
+##### Feature flags
+Optional features
+
+- *tokio* - Use to support tokio async environment
+```toml
+[dependencies]
+tokio = "1.28.2"
+wildbird = {version = "^0.0.8", features = ["tokio"]}
+```
 
 # Services
 
