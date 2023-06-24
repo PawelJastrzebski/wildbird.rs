@@ -6,4 +6,5 @@
     Rust framework 🐦 <sup style="color: black; font-size: 1.2rem; font-weight: 400;">'Experimental</sup>
 </h1>
 
-visit: [crates.io/crates/wildbird](https://crates.io/crates/wildbird)
+visit: [crates.io](https://crates.io/crates/wildbird)
+or [docs.rs](https://docs.rs/wildbird/*/wildbird/)
