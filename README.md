@@ -18,7 +18,7 @@
 Create service instance (Singleton) in one step
 
 ```rust
-use wildbird::derive::*;
+use wildbird::prelude::*;
 
 // Convert struct to Service + impl construct()
 

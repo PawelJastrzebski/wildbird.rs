@@ -3,7 +3,7 @@
 /// use:  cargo expand --test test_lazy
 
 mod lazy {
-    use wildbird::derive::*;
+    use wildbird::prelude::*;
 
     #[var]
     fn app_path() -> String {
