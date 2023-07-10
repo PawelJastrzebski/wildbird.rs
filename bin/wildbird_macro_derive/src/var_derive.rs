@@ -132,12 +132,8 @@ fn _var_validate(lazy_fn: &ItemFn, fields: &Vec<&PatType>) -> Option<TokenStream
     }
 
     let call_exist = format!("{first_arg_name}.call(");
-    if !lazy_fn
-        .block
-        .to_token_stream()
-        .to_string()
-        .trim()
-        .contains(&call_exist)
+    let body = lazy_fn.block.to_token_stream().to_string().trim().replace(" ", "");
+    if !body.contains(&call_exist)
     {
         return Some(error(
             lazy_fn.block.span(),

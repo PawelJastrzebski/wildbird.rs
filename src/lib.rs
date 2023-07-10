@@ -3,6 +3,7 @@
 mod lazy;
 mod callback;
 mod block;
+mod lock;
 
 /// Prelude Module
 pub mod prelude;

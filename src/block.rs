@@ -1,4 +1,5 @@
 ///  Blocks async fn in non async environment
+/// > ⚠️ Calling from the main asynchronous thread will freeze the application
 ///
 /// # Example
 /// ```

@@ -36,6 +36,7 @@ mod callback_tokio {
     #[cfg(feature = "tokio")]
     pub async fn should_derive_lazy() {
         println!("Option: {:?}", CALLBACK);
+        println!("Option: {:?}", CALLBACK.instance());
         println!("Number: {:?}", NUMBER);
     }
 }
