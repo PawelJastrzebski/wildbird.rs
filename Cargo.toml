@@ -12,7 +12,7 @@ tokio = ["dep:tokio"]
 [dependencies]
 wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.8" }
 futures-lite = "1.13.0"
-tokio = {version = "1.28.2", optional = true}
+tokio = {version = "1.28.2", features = ["signal", "rt-multi-thread"], optional = true}
 
 [dev-dependencies]
 tokio = {version = "1.28.2", features = ["macros", "rt-multi-thread"]}
