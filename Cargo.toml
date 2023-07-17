@@ -1,6 +1,6 @@
 [package]
 name = "wildbird"
-version = "0.0.8"
+version = "0.0.9"
 edition = "2021"
 description = "Rust Framework"
 license = "MIT"
@@ -10,7 +10,7 @@ rust-version = "1.70"
 tokio = ["dep:tokio"]
 
 [dependencies]
-wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.8" }
+wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.9" }
 futures-lite = "1.13.0"
 tokio = {version = "1.28.2", features = ["signal", "rt-multi-thread"], optional = true}
 
