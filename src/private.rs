@@ -40,7 +40,7 @@ static BLOCK_RUNTIME: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
         .enable_all()
         .worker_threads(2)
         .build()
-        .expect("tokio test runtime")
+        .expect("tokio block runtime init")
 });
 
 #[inline]

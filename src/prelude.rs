@@ -4,5 +4,7 @@ pub use crate::Lazy;
 pub use crate::tools::{
     lock::LockUnsafe,
     block::Block,
-    error::ErrorToString
+    error::ErrorToString,
+    error::ErrorInto,
+    error::ExpectLazy
 };

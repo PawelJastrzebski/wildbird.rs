@@ -99,11 +99,79 @@ pub mod error {
     pub trait ErrorToString<T> {
         fn map_err_str(self) -> Result<T, String>;
     }
-    
-    impl<T, E: std::error::Error> ErrorToString<T> for Result<T, E> {
+
+    impl<T, E: ToString> ErrorToString<T> for Result<T, E> {
         fn map_err_str(self) -> Result<T, String> {
             self.map_err(|e| e.to_string())
         }
     }
-    
+
+    pub trait ErrorInto<T, E> {
+        fn err_into(self) -> Result<T, E>;
+    }
+
+    impl <EI, T, E: Into<EI>> ErrorInto<T, EI> for Result<T, E>  {
+        fn err_into(self) -> Result<T, EI> {
+            match self {
+                Ok(ok) => Ok(ok),
+                Err(err) => Err(err.into())
+            }
+        }
+    }
+
+    pub trait ExpectLazy<T> {
+        fn expect_lazy<F>(self, fun: F) -> T
+        where
+            F: FnOnce() -> String;
+    }
+
+    impl<T, E> ExpectLazy<T> for Result<T, E> {
+        fn expect_lazy<F>(self, fun: F) -> T
+        where
+            F: FnOnce() -> String,
+        {
+            match self {
+                Ok(ok) => ok,
+                Err(_) => panic!("{}", fun()),
+            }
+        }
+    }
+
+    impl<T> ExpectLazy<T> for Option<T> {
+        fn expect_lazy<F>(self, fun: F) -> T
+        where
+            F: FnOnce() -> String,
+        {
+            match self {
+                Some(ok) => ok,
+                None => panic!("{}", fun()),
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_error_into {
+    use super::error::ErrorInto;
+    struct Error(String);
+
+    impl Into<Error> for String {
+        fn into(self) -> Error {
+            Error(self)
+        }
+    }
+
+    fn into_test() -> Result<String, String> {
+        Err("err".to_string())
+    }
+
+    fn test_inot_call() -> Result<String, Error> {
+        into_test().err_into()
+    }
+
+    #[test]
+    fn testing() {
+        let res = test_inot_call();
+        assert!(res.is_err())
+    }
 }
