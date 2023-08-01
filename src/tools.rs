@@ -110,11 +110,11 @@ pub mod error {
         fn err_into(self) -> Result<T, E>;
     }
 
-    impl <EI, T, E: Into<EI>> ErrorInto<T, EI> for Result<T, E>  {
+    impl<EI, T, E: Into<EI>> ErrorInto<T, EI> for Result<T, E> {
         fn err_into(self) -> Result<T, EI> {
             match self {
                 Ok(ok) => Ok(ok),
-                Err(err) => Err(err.into())
+                Err(err) => Err(err.into()),
             }
         }
     }
@@ -148,30 +148,76 @@ pub mod error {
             }
         }
     }
+
+    #[cfg(test)]
+    mod test_error_into {
+        use super::ErrorInto;
+        struct Error(String);
+
+        impl Into<Error> for String {
+            fn into(self) -> Error {
+                Error(self)
+            }
+        }
+
+        fn into_test() -> Result<String, String> {
+            Err("err".to_string())
+        }
+
+        fn test_inot_call() -> Result<String, Error> {
+            into_test().err_into()
+        }
+
+        #[test]
+        fn testing() {
+            let res = test_inot_call();
+            assert!(res.is_err())
+        }
+    }
 }
 
-#[cfg(test)]
-mod test_error_into {
-    use super::error::ErrorInto;
-    struct Error(String);
+pub mod str {
+    pub trait SplitToVec {
+        fn split_to_vec(&self, pattern: impl Into<String>) -> Vec<String>;
+    }
 
-    impl Into<Error> for String {
-        fn into(self) -> Error {
-            Error(self)
+    impl SplitToVec for String {
+        fn split_to_vec(&self, pattern: impl Into<String>) -> Vec<String> {
+            self.split(&pattern.into())
+                .map(|str| str.to_string())
+                .collect()
         }
     }
 
-    fn into_test() -> Result<String, String> {
-        Err("err".to_string())
+    impl SplitToVec for &str {
+        fn split_to_vec(&self, pattern: impl Into<String>) -> Vec<String> {
+            self.split(&pattern.into())
+                .map(|str| str.to_string())
+                .collect()
+        }
     }
 
-    fn test_inot_call() -> Result<String, Error> {
-        into_test().err_into()
+    #[cfg(test)]
+    mod test {
+        use super::*;
+
+        #[test]
+        pub fn should_split() {
+            let res = "test:ok".split_to_vec(":");
+            assert_eq!("test", res[0]);
+            assert_eq!("ok", res[1]);
+        }
     }
 
-    #[test]
-    fn testing() {
-        let res = test_inot_call();
-        assert!(res.is_err())
-    }
+}
+
+pub mod prelude {
+    pub use super::{
+        lock::LockUnsafe,
+        block::Block,
+        error::ErrorToString,
+        error::ErrorInto,
+        error::ExpectLazy,
+        str::SplitToVec
+    };
 }

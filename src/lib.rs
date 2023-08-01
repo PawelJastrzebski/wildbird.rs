@@ -2,7 +2,7 @@
 
 mod lazy;
 mod callback;
-mod tools;
+pub mod tools;
 
 /// Prelude Module
 pub mod prelude;
