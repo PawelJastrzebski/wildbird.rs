@@ -149,6 +149,25 @@ pub mod error {
         }
     }
 
+    pub trait InspectError<T,E> {
+        fn inspect_error<F>(self, fun: F) -> Result<T,E>
+        where
+            F: FnOnce(&E) -> ();
+    }
+
+    impl<T, E> InspectError<T,E> for Result<T, E> {
+        fn inspect_error<F>(self, fun: F) -> Result<T, E>
+        where
+            F: FnOnce(&E) -> (),
+        {
+            if let Err(err) = self.as_ref() {
+                fun(err)
+            }
+
+            self
+        }
+    }
+
     #[cfg(test)]
     mod test_error_into {
         use super::ErrorInto;
@@ -164,14 +183,30 @@ pub mod error {
             Err("err".to_string())
         }
 
-        fn test_inot_call() -> Result<String, Error> {
+        fn test_into_call() -> Result<String, Error> {
             into_test().err_into()
         }
 
         #[test]
         fn testing() {
-            let res = test_inot_call();
+            let res = test_into_call();
             assert!(res.is_err())
+        }
+    }
+
+    #[cfg(test)]
+    mod test_error_inspect { 
+        use super::InspectError;
+
+        fn into_test() -> Result<String, String> {
+            Err("ERROR".to_string())
+        }
+
+        #[test]
+        fn testing() {
+            let res = into_test();
+            assert!(res.is_err());
+            let _ = res.inspect_error(|e| println!("error inpsect ok: {e}"));
         }
     }
 }
@@ -218,6 +253,7 @@ pub mod prelude {
         error::ErrorToString,
         error::ErrorInto,
         error::ExpectLazy,
+        error::InspectError,
         str::SplitToVec
     };
 }
