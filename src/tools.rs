@@ -246,6 +246,48 @@ pub mod str {
 
 }
 
+mod math {
+
+    pub trait Round<T> {
+        fn round_precision(self, digits: usize) -> T;
+    }
+
+    impl Round<f64> for f64 {
+        #[inline(always)]
+        fn round_precision(self, digits: usize) -> f64 {
+            let multi = 10.0_f64.powf(digits as f64);
+            (self * multi).round() / multi
+        }
+    }
+
+    impl Round<f32> for f32 {
+        #[inline(always)]
+        fn round_precision(self, digits: usize) -> f32 {
+            let multi = 10.0_f32.powf(digits as f32);
+            (self * multi).round() / multi
+        }
+    }
+
+    #[cfg(test)]
+    mod test {
+        use super::*;
+
+        #[test]
+        pub fn should_round() {
+            assert_eq!(0.0, 0.00300.round_precision(1));
+            assert_eq!(0.1, 0.10300.round_precision(1));
+            assert_eq!(0.0, 0.33333.round_precision(0));
+            assert_eq!(0.3, 0.33333.round_precision(1));
+            assert_eq!(0.33, 0.33333.round_precision(2));
+            assert_eq!(0.333, 0.33333.round_precision(3));
+            assert_eq!(0.334, 0.33355.round_precision(3));
+            assert_eq!(0.02, 0.01499999999999999944488848768742172978818416595458984375_f64.round_precision(2));
+            assert_eq!(0.01, 0.014999999_f64.round_precision(2));
+        }
+    }
+
+}
+
 pub mod prelude {
     pub use super::{
         lock::LockUnsafe,
@@ -254,6 +296,7 @@ pub mod prelude {
         error::ErrorInto,
         error::ExpectLazy,
         error::InspectError,
-        str::SplitToVec
+        str::SplitToVec,
+        math::Round,
     };
 }
