@@ -53,6 +53,6 @@ impl<T> Lazy<T> {
     }
 
     pub fn to_ref(&self) -> &T {
-        &self._get().as_ref()
+        self._get().as_ref()
     }
 }

@@ -208,13 +208,13 @@ pub mod error {
     pub trait InspectError<T, E> {
         fn inspect_error<F>(self, fun: F) -> Result<T, E>
         where
-            F: FnOnce(&E) -> ();
+            F: FnOnce(&E);
     }
 
     impl<T, E> InspectError<T, E> for Result<T, E> {
         fn inspect_error<F>(self, fun: F) -> Result<T, E>
         where
-            F: FnOnce(&E) -> (),
+            F: FnOnce(&E),
         {
             if let Err(err) = self.as_ref() {
                 fun(err)

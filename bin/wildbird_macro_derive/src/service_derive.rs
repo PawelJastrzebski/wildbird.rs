@@ -40,7 +40,7 @@ fn _impl_service_construct(fun: ItemFn) -> TokenStream2 {
     let function_name = fun.sig.ident.to_token_stream();
     match fun.sig.output {
         ReturnType::Default => {
-            panic!("Specify function return type for: {}()", function_name.to_string())
+            panic!("Specify function return type for: {}()", function_name)
         }
         ReturnType::Type(_, t) => {
             let service_type = t.to_token_stream();

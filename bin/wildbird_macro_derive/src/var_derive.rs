@@ -12,7 +12,7 @@ impl VarAttr {
     pub fn parse_attr(attr: TokenStream) -> VarAttr {
         let map = parse_attr_to_map(attr);
         VarAttr {
-            name: map.get("name").map(|v| v.clone()),
+            name: map.get("name").cloned(),
         }
     }
 }
@@ -20,11 +20,11 @@ impl VarAttr {
 #[inline]
 fn impl_static(
     function_name: &TokenStream2,
-    const_name: &String,
+    const_name: &str,
     return_type: &TokenStream2,
     visibility_token: &TokenStream2,
 ) -> TokenStream2 {
-    let static_name = TokenStream2::from_str(&*const_name).expect("Const name");
+    let static_name = TokenStream2::from_str(const_name).expect("Const name");
     quote! {
         #[allow(non_upper_case_globals)]
         #visibility_token static #static_name: wildbird::Lazy<#return_type> = wildbird::private::lazy_construct(#function_name);
@@ -86,9 +86,9 @@ fn _impl_var_static(
 }
 
 fn unwrap_callback_type(callback_arg_type: TokenStream2) -> TokenStream2 {
-    let str = callback_arg_type.to_string().trim().replace(" ", "");
+    let str = callback_arg_type.to_string().trim().replace(' ', "");
     let from = str.find("Callback<").map(|v| v + 9).unwrap_or(0);
-    let to = str.rfind(">").unwrap_or(str.len());
+    let to = str.rfind('>').unwrap_or(str.len());
     TokenStream2::from_str(&str[from..to]).expect("Valid type")
 }
 
@@ -96,7 +96,7 @@ fn _var_validate(lazy_fn: &ItemFn, fields: &Vec<&PatType>) -> Option<TokenStream
     let Some(first_arg) = fields.get(0) else {
         if let ReturnType::Default = lazy_fn.sig.output {
             return Some(
-                error(lazy_fn.sig.span(), format!("Specify function return type"))
+                error(lazy_fn.sig.span(), "Specify function return type".to_string())
             );
         }
         return None;
@@ -107,32 +107,32 @@ fn _var_validate(lazy_fn: &ItemFn, fields: &Vec<&PatType>) -> Option<TokenStream
         .to_token_stream()
         .to_string()
         .trim()
-        .replace(" ", "");
+        .replace(' ', "");
     let first_arg_name = first_arg.pat.to_token_stream().to_string();
 
     if fields.len() == 1 && !first_arg_type.contains("Callback<") {
         return Some(error(
             fields.as_slice()[0].ty.span(),
-            format!("#[var] - Invalid \"callback\" first arg type: \n\texpected: Callback<T>"),
+            "#[var] - Invalid \"callback\" first arg type: \n\texpected: Callback<T>".to_string(),
         ));
     }
 
     if fields.len() > 1 {
         return Some(error(
             lazy_fn.sig.inputs.span(),
-            format!("#[var] - Invalid number of arguments\n\t zero or one (callback) allowed"),
+            "#[var] - Invalid number of arguments\n\t zero or one (callback) allowed".to_string(),
         ));
     }
 
     if lazy_fn.sig.asyncness.is_none() {
         return Some(error(
             lazy_fn.sig.span(),
-            format!("#[var] - Callback function must by async"),
+            "#[var] - Callback function must by async".to_string(),
         ));
     }
 
     let call_exist = format!("{first_arg_name}.call(");
-    let body = lazy_fn.block.to_token_stream().to_string().trim().replace(" ", "");
+    let body = lazy_fn.block.to_token_stream().to_string().trim().replace(' ', "");
     if !body.contains(&call_exist)
     {
         return Some(error(
@@ -171,10 +171,7 @@ pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
 fn parse_fn_args(lazy_fn: &ItemFn) -> Vec<&PatType> {
     let mut fields = vec![];
     for t in lazy_fn.sig.inputs.iter() {
-        match t {
-            FnArg::Typed(t) => fields.push(t),
-            _ => {}
-        }
+        if let FnArg::Typed(t) = t { fields.push(t) }
     }
     fields
 }

@@ -9,7 +9,7 @@ impl<T> Callback<T> {
         Callback(tx)
     }
 
-    pub fn call(&self, init: T) -> () {
+    pub fn call(&self, init: T) {
         let _ = self.0.send(init);
     }
 }
