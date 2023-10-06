@@ -32,14 +32,14 @@ pub mod block {
     }
 
     #[macro_export]
-    macro_rules! async_block_impl {
+    macro_rules! async_block {
         ($($e:tt)*) => {
             async {
                 $($e)*
             }.block()
         }
     }
-    pub use async_block_impl as async_block;
+    pub use async_block;
 
     #[cfg(test)]
     mod tests {
