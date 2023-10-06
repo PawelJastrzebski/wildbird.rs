@@ -31,6 +31,31 @@ pub mod block {
         }
     }
 
+    /// Runs code in async environment
+    ///
+    /// # Example
+    /// ```rust
+    /// use wildbird::prelude::*;
+    ///
+    /// async fn fetch_from_api() -> String {
+    ///     std::thread::sleep(std::time::Duration::from_millis(100));
+    ///     String::from("Ok")
+    /// }
+    ///
+    /// trait Test {
+    ///     fn get_response() -> String {
+    ///         async_block! {
+    ///             let res = fetch_from_api().await;
+    ///             assert_eq!("Ok", res);
+    ///             res
+    ///         }
+    ///     }
+    /// }
+    /// 
+    /// # struct TestImpl;
+    /// # impl Test for TestImpl {}
+    /// # TestImpl::get_response();
+    /// ```
     #[macro_export]
     macro_rules! async_block {
         ($($e:tt)*) => {
@@ -69,7 +94,7 @@ pub mod block {
                 format!("{data1}, {data2}")
             };
 
-            let macro_result = async_block!{
+            let macro_result = async_block! {
                 let data1 = fetch_from_api().await;
                 let data2 = fetch_from_api().await;
                 format!("{data1}, {data2}")
