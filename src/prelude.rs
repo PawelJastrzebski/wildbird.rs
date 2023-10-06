@@ -1,4 +1,7 @@
 pub use crate::derive::*;
+pub use crate::tools::prelude::*;
 pub use crate::Callback;
 pub use crate::Lazy;
-pub use crate::tools::prelude::*;
+
+#[cfg(feature = "rayon")]
+pub use crate::thread::{SpawnScopeTask, SpawnTask, Task};

@@ -1,8 +1,13 @@
 #![doc = include_str!("../README.md")]
 
-mod lazy;
 mod callback;
+mod lazy;
 pub mod tools;
+
+#[cfg(feature = "rayon")]
+mod thread;
+#[cfg(feature = "rayon")]
+pub use rayon;
 
 /// Prelude Module
 pub mod prelude;
@@ -10,8 +15,8 @@ pub mod prelude;
 /// Macro System
 pub extern crate wildbird_macro_derive as derive;
 
-pub use self::lazy::Lazy;
 pub use self::callback::Callback;
+pub use self::lazy::Lazy;
 
 /// Private Module
 /// > **Don't use in your code directly**

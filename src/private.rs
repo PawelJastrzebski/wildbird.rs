@@ -39,16 +39,18 @@ static BLOCK_RUNTIME: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .worker_threads(2)
+        .thread_name("tokio block runtime")
         .build()
         .expect("tokio block runtime init")
 });
 
-#[inline]
+#[inline(always)]
 #[doc(hidden)]
+// Panic in non multi-thread tokio runtime
 pub fn block<T>(future: impl Future<Output = T>) -> T {
     #[cfg(feature = "tokio")]
     {
-        tokio::task::block_in_place(move || BLOCK_RUNTIME.block_on(future))
+        tokio::task::block_in_place(move || BLOCK_RUNTIME.handle().block_on(future))
     }
     #[cfg(not(feature = "tokio"))]
     {
@@ -56,7 +58,7 @@ pub fn block<T>(future: impl Future<Output = T>) -> T {
     }
 }
 
-#[inline]
+#[inline(always)]
 #[doc(hidden)]
 pub fn block_fn<D, F: Future<Output = D>>(future: fn() -> F) -> D {
     block(future())

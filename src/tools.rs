@@ -25,15 +25,26 @@ pub mod block {
     where
         F: std::future::IntoFuture,
     {
+        #[inline(always)]
         fn block(self) -> F::Output {
             crate::private::block(self.into_future())
         }
     }
 
+    #[macro_export]
+    macro_rules! async_block_impl {
+        ($($e:tt)*) => {
+            async {
+                $($e)*
+            }.block()
+        }
+    }
+    pub use async_block_impl as async_block;
+
     #[cfg(test)]
     mod tests {
         use crate::prelude::*;
-        use std::time::Duration;
+        use std::time::{Duration, Instant};
 
         async fn fetch_from_api() -> String {
             std::thread::sleep(Duration::from_millis(100));
@@ -42,12 +53,12 @@ pub mod block {
 
         #[test]
         fn should_block() {
-            println!("Res: {}", fetch_from_api().block())
+            println!("Res: {}", fetch_from_api().block());
         }
 
-        #[tokio::test]
+        #[tokio::test(flavor = "multi_thread")]
         async fn should_block_async() {
-            println!("Res: {}", fetch_from_api().block())
+            println!("Res: {}", fetch_from_api().block());
         }
 
         #[test]
@@ -58,7 +69,52 @@ pub mod block {
                 format!("{data1}, {data2}")
             };
 
-            println!("Data: {}", action.block())
+            let macro_result = async_block!{
+                let data1 = fetch_from_api().await;
+                let data2 = fetch_from_api().await;
+                format!("{data1}, {data2}")
+            };
+
+            assert_eq!("Api respone, Api respone", action.block());
+            assert_eq!("Api respone, Api respone", macro_result);
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn performance_test() {
+            async fn async_fn(i: i32) -> i32 {
+                10 + i
+            }
+
+            //warm up
+            async_fn(0).await;
+            async_fn(0).block();
+
+            // standard async
+            let now = Instant::now();
+            for i in 0..1_000_000 {
+                async_fn(i).await;
+            }
+            let async_took = now.elapsed().as_millis();
+
+            // async block (recomended)
+            let now = Instant::now();
+            async_block! {
+                for i in 0..1_000_000 {
+                    async_fn(i).await;
+                }
+            }
+            let async_block = now.elapsed().as_millis();
+
+            // block in loop (not recomended)
+            let now = Instant::now();
+            for i in 0..1_000_000 {
+                async_fn(i).block();
+            }
+            let async_block_in_loop = now.elapsed().as_millis();
+
+            println!("await took: {} ms", async_took);
+            println!("async_block took: {} ms", async_block);
+            println!("async_block in loop took: {} ms", async_block_in_loop);
         }
     }
 }
@@ -149,13 +205,13 @@ pub mod error {
         }
     }
 
-    pub trait InspectError<T,E> {
-        fn inspect_error<F>(self, fun: F) -> Result<T,E>
+    pub trait InspectError<T, E> {
+        fn inspect_error<F>(self, fun: F) -> Result<T, E>
         where
             F: FnOnce(&E) -> ();
     }
 
-    impl<T, E> InspectError<T,E> for Result<T, E> {
+    impl<T, E> InspectError<T, E> for Result<T, E> {
         fn inspect_error<F>(self, fun: F) -> Result<T, E>
         where
             F: FnOnce(&E) -> (),
@@ -195,7 +251,7 @@ pub mod error {
     }
 
     #[cfg(test)]
-    mod test_error_inspect { 
+    mod test_error_inspect {
         use super::InspectError;
 
         fn into_test() -> Result<String, String> {
@@ -243,7 +299,6 @@ pub mod str {
             assert_eq!("ok", res[1]);
         }
     }
-
 }
 
 mod math {
@@ -281,22 +336,18 @@ mod math {
             assert_eq!(0.33, 0.33333.round_precision(2));
             assert_eq!(0.333, 0.33333.round_precision(3));
             assert_eq!(0.334, 0.33355.round_precision(3));
-            assert_eq!(0.02, 0.01499999999999999944488848768742172978818416595458984375_f64.round_precision(2));
+            assert_eq!(
+                0.02,
+                0.01499999999999999944488848768742172978818416595458984375_f64.round_precision(2)
+            );
             assert_eq!(0.01, 0.014999999_f64.round_precision(2));
         }
     }
-
 }
 
 pub mod prelude {
     pub use super::{
-        lock::LockUnsafe,
-        block::Block,
-        error::ErrorToString,
-        error::ErrorInto,
-        error::ExpectLazy,
-        error::InspectError,
-        str::SplitToVec,
-        math::Round,
+        block::async_block, block::Block, error::ErrorInto, error::ErrorToString,
+        error::ExpectLazy, error::InspectError, lock::LockUnsafe, math::Round, str::SplitToVec,
     };
 }
