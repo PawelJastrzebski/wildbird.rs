@@ -144,29 +144,31 @@ where
     }
 }
 
-pub struct AsyncMap<I, B, F>
+pub struct AsyncMap<'a, I, B, F>
 where
     I: Iterator,
     F: Fn(<I as Iterator>::Item) -> B,
 {
     iter: I,
+    pool: &'a rayon::ThreadPool,
     fun: std::sync::Arc<F>,
 }
 
-impl<I, B, F> AsyncMap<I, B, F>
+impl<'a, I, B, F> AsyncMap<'a, I, B, F>
 where
     I: Iterator,
     F: Fn(<I as Iterator>::Item) -> B,
 {
-    fn new(iter: I, fun: F) -> Self {
+    fn new(iter: I, pool: &'a rayon::ThreadPool, fun: F) -> Self {
         Self {
             iter,
+            pool,
             fun: std::sync::Arc::new(fun),
         }
     }
 }
 
-impl<I, B, F> Iterator for AsyncMap<I, B, F>
+impl<'a, I, B, F> Iterator for AsyncMap<'a, I, B, F>
 where
     I: Iterator,
     <I as Iterator>::Item: Send + 'static,
@@ -178,7 +180,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let fun = self.fun.clone();
         match self.iter.next() {
-            Some(v) => Some(DEFAULT_POOL.spawn_task(move || fun(v))),
+            Some(v) => Some(self.pool.spawn_task(move || fun(v))),
             None => None,
         }
     }
@@ -191,7 +193,8 @@ where
     F: Fn(I::Item) -> B + Send + Sync + 'static,
     B: Send + 'static,
 {
-    fn async_map(self, f: F) -> AsyncMap<I, B, F>;
+    fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, B, F>;
+    fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, B, F>;
 }
 
 impl<I, B, F> AsyncMapIter<I, B, F> for I
@@ -201,20 +204,34 @@ where
     F: Fn(I::Item) -> B + Send + Sync + 'static,
     B: Send + 'static,
 {
-    fn async_map(self, f: F) -> AsyncMap<I, B, F> {
-        AsyncMap::new(self, f)
+    fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, B, F> {
+        AsyncMap::new(self, CPU_POOL.to_ref(), f)
+    }
+
+    fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, B, F> {
+        AsyncMap::new(self, pool, f)
     }
 }
 
-pub static DEFAULT_POOL: crate::Lazy<rayon::ThreadPool> = crate::Lazy::new(build_default_pool);
-
-pub fn build_default_pool() -> rayon::ThreadPool {
-    let threads = std::thread::available_parallelism()
+pub static CPU_POOL: crate::Lazy<rayon::ThreadPool> = crate::Lazy::new(|| {
+    let cpus = std::thread::available_parallelism()
         .map(|num| num.get())
         .unwrap_or(8);
 
+    build_pool(cpus / 2)
+});
+
+pub static IO_POOL: crate::Lazy<rayon::ThreadPool> = crate::Lazy::new(|| {
+    let cpus = std::thread::available_parallelism()
+        .map(|num| num.get())
+        .unwrap_or(8);
+
+    build_pool(cpus * 4)
+});
+
+pub fn build_pool(threads: usize) -> rayon::ThreadPool {
     rayon::ThreadPoolBuilder::new()
-        .num_threads(threads / 2)
+        .num_threads(threads)
         .build()
         .expect("Unable to create thread pool")
 }
@@ -227,31 +244,27 @@ mod tests {
 
     #[test]
     fn test() {
-        DEFAULT_POOL.instance();
         for _ in 0..1000 {
             let now = Instant::now();
             let result = 20;
-            let res = DEFAULT_POOL.spawn_task(move || result + 1).wait();
+            let res = CPU_POOL.spawn_task(move || result + 1).wait();
             println!("{res:?} , took: {} micros", now.elapsed().as_micros());
         }
     }
 
     #[tokio::test]
     async fn test_async() {
-        DEFAULT_POOL.instance();
         for _ in 0..1000 {
             let now = Instant::now();
             let result = 20;
-            let res = DEFAULT_POOL
-                .spawn_task_async(async move { result + 1 })
-                .wait();
+            let res = CPU_POOL.spawn_task_async(async move { result + 1 }).wait();
             println!("{res:?} , took: {} micros", now.elapsed().as_micros());
         }
     }
 
     #[test]
     fn test_scope() {
-        DEFAULT_POOL.scope(|scope| {
+        CPU_POOL.scope(|scope| {
             for _ in 0..1000 {
                 let now = Instant::now();
                 let res = scope.spawn_task(|_| 1 + 1).wait();
@@ -262,7 +275,7 @@ mod tests {
 
     #[test]
     fn test_scope_async() {
-        DEFAULT_POOL.scope(|scope| {
+        CPU_POOL.scope(|scope| {
             let now = Instant::now();
             let res = scope.spawn_task_async(async { 10 }).wait();
             println!("{res:?} , took: {}micro", now.elapsed().as_micros());
@@ -273,15 +286,16 @@ mod tests {
     fn test_collect_tasks() {
         let mut tasks: Vec<Task<i32>> = Vec::new();
 
-        for i in 0..15 {
-            tasks.push(DEFAULT_POOL.spawn_task(move || {
+        for i in 0..30_000 {
+            tasks.push(IO_POOL.spawn_task(move || {
                 std::thread::sleep(Duration::from_nanos(250_000));
                 i + 1
             }))
         }
 
+        println!("all push");
+
         for t in &tasks {
-            std::thread::sleep(Duration::from_nanos(1));
             println!("is ready: {}", t.is_ready())
         }
 
@@ -308,6 +322,25 @@ mod tests {
             .into_iter()
             .rev()
             .async_map(|t| {
+                std::thread::sleep(Duration::from_millis(100));
+                t
+            })
+            .wait_any();
+
+        println!("one is ready: {result}")
+    }
+
+    #[test]
+    fn test_async_map_iter_wait_any_on_specific_pool() {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(1)
+            .build()
+            .unwrap();
+
+        let result: i32 = (0..1000)
+            .into_iter()
+            .rev()
+            .async_map_pool(&pool, |t| {
                 std::thread::sleep(Duration::from_millis(100));
                 t
             })
