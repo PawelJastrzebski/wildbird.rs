@@ -149,6 +149,8 @@ mod spawn_task_rayon {
 pub use spawn_task_rayon::*;
 
 mod async_map {
+    use std::marker::PhantomData;
+
     use super::{SpawnTask, Task, CPU_POOL};
 
     pub struct AsyncMap<'a, I, B, F>
@@ -158,7 +160,7 @@ mod async_map {
     {
         iter: I,
         pool: &'a rayon::ThreadPool,
-        fun: std::sync::Arc<F>
+        fun: std::sync::Arc<F>,
     }
 
     impl<'a, I, B, F> AsyncMap<'a, I, B, F>
@@ -170,7 +172,7 @@ mod async_map {
             Self {
                 iter,
                 pool,
-                fun: std::sync::Arc::new(fun)
+                fun: std::sync::Arc::new(fun),
             }
         }
     }
@@ -201,11 +203,7 @@ mod async_map {
         B: Send + 'static,
     {
         fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, B, F>;
-        fn async_map_pool<'a>(
-            self,
-            pool: &'a rayon::ThreadPool,
-            f: F,
-        ) -> AsyncMap<'a, I, B, F>;
+        fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, B, F>;
     }
 
     impl<I, B, F> AsyncMapIter<I, B, F> for I
@@ -216,15 +214,78 @@ mod async_map {
         B: Send + 'static,
     {
         fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, B, F> {
-            AsyncMap::new(self, CPU_POOL.to_ref(), f)
+            AsyncMap::new(self, &CPU_POOL, f)
         }
 
-        fn async_map_pool<'a>(
-            self,
-            pool: &'a rayon::ThreadPool,
-            f: F,
-        ) -> AsyncMap<'a, I, B, F> {
+        fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, B, F> {
             AsyncMap::new(self, pool, f)
+        }
+    }
+
+    pub struct AsyncChain<'a, I, T, B, F>
+    where
+        I: Iterator<Item = Task<T>>,
+        F: Fn(T) -> B,
+    {
+        iter: I,
+        pool: &'a rayon::ThreadPool,
+        fun: std::sync::Arc<F>,
+        input: PhantomData<T>,
+    }
+
+    impl<'a, I, T, B, F> AsyncChain<'a, I, T, B, F>
+    where
+        I: Iterator<Item = Task<T>>,
+        F: Fn(T) -> B,
+    {
+        fn new(iter: I, pool: &'a rayon::ThreadPool, fun: F) -> Self {
+            Self {
+                iter,
+                pool,
+                fun: std::sync::Arc::new(fun),
+                input: PhantomData,
+            }
+        }
+    }
+
+    impl<'a, I, T, B, F> Iterator for AsyncChain<'a, I, T, B, F>
+    where
+        I: Iterator<Item = Task<T>>,
+        <I as Iterator>::Item: Send + 'static,
+        F: Fn(T) -> B + Send + Sync + 'static,
+        B: Send + 'static,
+        T: Send + 'static,
+    {
+        type Item = Task<B>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            let fun = self.fun.clone();
+            match self.iter.next() {
+                Some(v) => Some(self.pool.spawn_task(move || fun(v.wait()))),
+                None => None,
+            }
+        }
+    }
+
+    pub trait AsyncChainIter<I, T, B, F>
+    where
+        I: Iterator<Item = Task<T>>,
+        F: Fn(T) -> B + Send + Sync + 'static,
+        B: Send + 'static,
+        T: Send + 'static,
+    {
+        fn async_chain<'a>(self, f: F) -> AsyncChain<'a, I, T, B, F>;
+    }
+
+    impl<I, T, B, F> AsyncChainIter<I, T, B, F> for I
+    where
+        I: Iterator<Item = Task<T>>,
+        F: Fn(T) -> B + Send + Sync + 'static,
+        B: Send + 'static,
+        T: Send + 'static,
+    {
+        fn async_chain<'a>(self, f: F) -> AsyncChain<'a, I, T, B, F> {
+            AsyncChain::new(self, &CPU_POOL, f)
         }
     }
 }
@@ -361,8 +422,7 @@ mod tests {
                 std::thread::sleep(Duration::from_millis(100));
                 t
             })
-            .async_map_pool(&CPU_POOL, |t| {
-                let v = t.wait();
+            .async_chain(|v| {
                 std::thread::sleep(Duration::from_millis(110));
                 format!("  Value is: {}", v)
             })
