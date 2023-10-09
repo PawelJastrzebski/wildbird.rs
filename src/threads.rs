@@ -40,9 +40,78 @@ impl<T> Task<T> {
 }
 
 mod spawn_task_rayon {
-    use super::Task;
+    use super::{Task, CPU_POOL};
     use crate::prelude::Block;
     use std::{future::IntoFuture, thread::sleep, time::Duration};
+
+    pub trait ChainTask<T>
+    where
+        T: Send + 'static,
+    {
+        fn chain_task<OP, R>(self, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static;
+
+        fn chain_task_pool<OP, R>(self, pool: &rayon::ThreadPool, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static;
+    }
+
+    impl<T> ChainTask<T> for Task<T>
+    where
+        T: Send + 'static,
+    {
+        fn chain_task<OP, R>(self, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static,
+        {
+            CPU_POOL.spawn_task(|| op(self.wait()))
+        }
+
+        fn chain_task_pool<OP, R>(self, pool: &rayon::ThreadPool, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static,
+        {
+            pool.spawn_task(|| op(self.wait()))
+        }
+    }
+
+    pub trait IntoTask<T>
+    where
+        T: Send + 'static,
+    {
+        fn into_task<OP, R>(self, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static;
+
+        fn into_task_pool<OP, R>(self, pool: &rayon::ThreadPool, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static;
+    }
+
+    impl<T: Send + 'static> IntoTask<T> for T {
+        fn into_task<OP, R>(self, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static,
+        {
+            CPU_POOL.spawn_task(|| op(self))
+        }
+
+        fn into_task_pool<OP, R>(self, pool: &rayon::ThreadPool, op: OP) -> Task<R>
+        where
+            R: Send + 'static,
+            OP: FnOnce(T) -> R + Send + 'static,
+        {
+            pool.spawn_task(|| op(self))
+        }
+    }
 
     pub trait SpawnTask<T>
     where
@@ -155,7 +224,7 @@ mod async_map {
 
     pub struct AsyncMap<'a, I, F>
     where
-        I: Iterator
+        I: Iterator,
     {
         iter: I,
         pool: &'a rayon::ThreadPool,
@@ -223,7 +292,7 @@ mod async_map {
 
     pub struct AsyncChain<'a, I, T, F>
     where
-        I: Iterator<Item = Task<T>>
+        I: Iterator<Item = Task<T>>,
     {
         iter: I,
         pool: &'a rayon::ThreadPool,
@@ -322,10 +391,38 @@ mod tests {
     fn test() {
         for _ in 0..1000 {
             let now = Instant::now();
-            let result = 20;
-            let res = CPU_POOL.spawn_task(move || result + 1).wait();
+            let res = 20.into_task(|v| v + 1).wait();
             println!("{res:?} , took: {} micros", now.elapsed().as_micros());
         }
+    }
+
+    #[test]
+    fn test_chain() {
+        let res1 = 20.into_task(|v| v + 1).wait().into_task(|v| v + 1).wait();
+        let res2 = 20.into_task(|v| v + 1).chain_task(|v| v + 1).wait();
+        assert_eq!(res1, res2)
+    }
+
+    #[test]
+    fn test_chain_lazy() {
+        IO_POOL.instance();
+        CPU_POOL.instance();
+        let now = Instant::now();
+
+        for i in 0..1000 {
+            i.into_task(|v| v)
+                .chain_task_pool(&IO_POOL, |v| v)
+                .chain_task(|v| {
+                    std::thread::sleep(Duration::from_millis(20));
+                    println!("non blocking until call wait() {v}")
+                });
+        }
+
+        let spawn_took = now.elapsed().as_millis();
+        println!("took: {spawn_took} ms");
+        assert!(spawn_took < 20);
+        // should print execution message after 20ms
+        std::thread::sleep(Duration::from_millis(30));
     }
 
     #[tokio::test]
