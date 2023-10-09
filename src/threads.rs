@@ -153,17 +153,16 @@ mod async_map {
 
     use super::{SpawnTask, Task, CPU_POOL};
 
-    pub struct AsyncMap<'a, I, B, F>
+    pub struct AsyncMap<'a, I, F>
     where
-        I: Iterator,
-        F: Fn(<I as Iterator>::Item) -> B,
+        I: Iterator
     {
         iter: I,
         pool: &'a rayon::ThreadPool,
         fun: std::sync::Arc<F>,
     }
 
-    impl<'a, I, B, F> AsyncMap<'a, I, B, F>
+    impl<'a, I, B, F> AsyncMap<'a, I, F>
     where
         I: Iterator,
         F: Fn(<I as Iterator>::Item) -> B,
@@ -177,7 +176,7 @@ mod async_map {
         }
     }
 
-    impl<'a, I, B, F> Iterator for AsyncMap<'a, I, B, F>
+    impl<'a, I, B, F> Iterator for AsyncMap<'a, I, F>
     where
         I: Iterator,
         <I as Iterator>::Item: Send + 'static,
@@ -202,8 +201,8 @@ mod async_map {
         F: Fn(I::Item) -> B + Send + Sync + 'static,
         B: Send + 'static,
     {
-        fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, B, F>;
-        fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, B, F>;
+        fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, F>;
+        fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, F>;
     }
 
     impl<I, B, F> AsyncMapIter<I, B, F> for I
@@ -213,19 +212,18 @@ mod async_map {
         F: Fn(I::Item) -> B + Send + Sync + 'static,
         B: Send + 'static,
     {
-        fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, B, F> {
+        fn async_map<'a>(self, f: F) -> AsyncMap<'a, I, F> {
             AsyncMap::new(self, &CPU_POOL, f)
         }
 
-        fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, B, F> {
+        fn async_map_pool<'a>(self, pool: &'a rayon::ThreadPool, f: F) -> AsyncMap<'a, I, F> {
             AsyncMap::new(self, pool, f)
         }
     }
 
-    pub struct AsyncChain<'a, I, T, B, F>
+    pub struct AsyncChain<'a, I, T, F>
     where
-        I: Iterator<Item = Task<T>>,
-        F: Fn(T) -> B,
+        I: Iterator<Item = Task<T>>
     {
         iter: I,
         pool: &'a rayon::ThreadPool,
@@ -233,7 +231,7 @@ mod async_map {
         input: PhantomData<T>,
     }
 
-    impl<'a, I, T, B, F> AsyncChain<'a, I, T, B, F>
+    impl<'a, I, T, B, F> AsyncChain<'a, I, T, F>
     where
         I: Iterator<Item = Task<T>>,
         F: Fn(T) -> B,
@@ -248,7 +246,7 @@ mod async_map {
         }
     }
 
-    impl<'a, I, T, B, F> Iterator for AsyncChain<'a, I, T, B, F>
+    impl<'a, I, T, B, F> Iterator for AsyncChain<'a, I, T, F>
     where
         I: Iterator<Item = Task<T>>,
         <I as Iterator>::Item: Send + 'static,
@@ -274,7 +272,7 @@ mod async_map {
         B: Send + 'static,
         T: Send + 'static,
     {
-        fn async_chain<'a>(self, f: F) -> AsyncChain<'a, I, T, B, F>;
+        fn async_chain<'a>(self, f: F) -> AsyncChain<'a, I, T, F>;
     }
 
     impl<I, T, B, F> AsyncChainIter<I, T, B, F> for I
@@ -284,7 +282,7 @@ mod async_map {
         B: Send + 'static,
         T: Send + 'static,
     {
-        fn async_chain<'a>(self, f: F) -> AsyncChain<'a, I, T, B, F> {
+        fn async_chain<'a>(self, f: F) -> AsyncChain<'a, I, T, F> {
             AsyncChain::new(self, &CPU_POOL, f)
         }
     }
