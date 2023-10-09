@@ -4,4 +4,4 @@ pub use crate::Callback;
 pub use crate::Lazy;
 
 #[cfg(feature = "rayon")]
-pub use crate::thread::{SpawnScopeTask, SpawnTask, Task};
+pub use crate::threads::{SpawnScopeTask, SpawnTask, Task, IO_POOL, CPU_POOL};
