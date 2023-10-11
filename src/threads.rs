@@ -187,12 +187,12 @@ mod spawn_task_rayon {
         }
     }
 
-    pub trait CollectAll<T> {
+    pub trait CollectTasks<T> {
         fn wait_all(self) -> Vec<T>;
         fn wait_any(self) -> T;
     }
 
-    impl<T, I> CollectAll<T> for I
+    impl<T, I> CollectTasks<T> for I
     where
         I: std::iter::IntoIterator<Item = Task<T>>,
     {
