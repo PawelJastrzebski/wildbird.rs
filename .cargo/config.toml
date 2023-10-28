@@ -1,6 +1,2 @@
 [env]
-# PX_DEPLOY_HOST = "http://127.0.0.1:9091"
-# PX_DEPLOY_HOST = "http://127.0.0.1:8080"
-
 RUST_BACKTRACE = "full"
-#RUSTFLAGS = "-Z macro-backtrace"
