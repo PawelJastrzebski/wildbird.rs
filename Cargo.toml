@@ -6,6 +6,13 @@ description = "Rust Framework"
 license = "MIT"
 rust-version = "1.70"
 
+exclude = [
+    "DEV.md",
+    "tests/*",
+    ".cargo/*",
+    "**/.gitignore"
+]
+
 [features]
 default = ["tokio", "rayon"]
 tokio = ["dep:tokio"]
