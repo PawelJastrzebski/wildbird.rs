@@ -3,7 +3,7 @@
 <a href="#top"></a>
 
 <h1 style="color: #376FFF; font-size: 2rem; font-weight: 500;">
-    Rust framework 🐦 <sup style="color: black; font-size: 1.2rem; font-weight: 400;">'Beta</sup>
+    Rust framework 🐦 <sup style="color: black; font-size: 1.2rem; font-weight: 400;">'Experimental</sup>
 </h1>
 
 # Table of contents
@@ -148,7 +148,7 @@ async fn init_http_service(callback: wildbird::Callback<String>) {
 Cargo.toml
 ```toml
 [dependencies]
-wildbird = "^0.0.8"
+wildbird = "^0.0.10"
 ```
 
 ##### Feature flags
@@ -158,9 +158,14 @@ Optional features
 ```toml
 [dependencies]
 tokio = "1.28.2"
-wildbird = {version = "^0.0.8", features = ["tokio"]}
+wildbird = {version = "^0.0.10", features = ["tokio"]}
 ```
 <br />
+
+##### Project status
+
+Project is in early state of development. Each release is prior tested but api changes will most likely to happen in the future as the project progress.
+
 
 # Created By
 
