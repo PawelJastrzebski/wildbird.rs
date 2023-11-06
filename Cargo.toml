@@ -1,6 +1,6 @@
 [package]
 name = "wildbird"
-version = "0.0.9"
+version = "0.0.10"
 edition = "2021"
 description = "Rust Framework"
 license = "MIT"
@@ -12,7 +12,7 @@ tokio = ["dep:tokio"]
 rayon = ["dep:rayon"]
 
 [dependencies]
-wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.9" }
+wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.10" }
 futures-lite = "1.13.0"
 tokio = {version = "1.28.2", features = ["signal", "rt-multi-thread", "time"], optional = true}
 rayon = {version = "1.8.0", optional = true}
