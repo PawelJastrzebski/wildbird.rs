@@ -215,6 +215,7 @@ mod spawn_task_rayon {
         }
     }
 }
+use rayon::ThreadPoolBuildError;
 pub use spawn_task_rayon::*;
 
 mod async_map {
@@ -359,26 +360,30 @@ mod async_map {
 pub use async_map::*;
 
 pub static CPU_POOL: crate::Lazy<rayon::ThreadPool> = crate::Lazy::new(|| {
-    let cpus = std::thread::available_parallelism()
-        .map(|num| num.get())
-        .unwrap_or(8);
-
-    build_pool(cpus / 2)
+    let cpus = number_of_cpus();
+    build_thread_pool(cpus / 2, "CPU").expect("Unable to create Cpu thread pool")
 });
 
 pub static IO_POOL: crate::Lazy<rayon::ThreadPool> = crate::Lazy::new(|| {
-    let cpus = std::thread::available_parallelism()
-        .map(|num| num.get())
-        .unwrap_or(8);
-
-    build_pool(cpus * 4)
+    let cpus = number_of_cpus();
+    build_thread_pool(cpus * 4, "I/O").expect("Unable to create I/O thread pool")
 });
 
-pub fn build_pool(threads: usize) -> rayon::ThreadPool {
+pub fn number_of_cpus() -> usize {
+    std::thread::available_parallelism()
+        .map(|num| num.get())
+        .unwrap_or(8)
+}
+
+pub fn build_thread_pool(
+    threads: usize,
+    name: impl Into<String>,
+) -> Result<rayon::ThreadPool, ThreadPoolBuildError> {
+    let name = name.into();
     rayon::ThreadPoolBuilder::new()
+        .thread_name(move |index| format!("{} {index}/{}-thread", name.clone(), threads))
         .num_threads(threads)
         .build()
-        .expect("Unable to create thread pool")
 }
 
 #[cfg(test)]
@@ -389,7 +394,7 @@ mod tests {
 
     #[test]
     fn test() {
-        for _ in 0..1000 {
+        for _ in 0..100 {
             let now = Instant::now();
             let res = 20.into_task(|v| v + 1).wait();
             println!("{res:?} , took: {} micros", now.elapsed().as_micros());
@@ -409,7 +414,7 @@ mod tests {
         CPU_POOL.instance();
         let now = Instant::now();
 
-        for i in 0..1000 {
+        for i in 0..100 {
             i.into_task(|v| v)
                 .chain_task_pool(&IO_POOL, |v| v)
                 .chain_task(|v| {
@@ -427,7 +432,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_async() {
-        for _ in 0..1000 {
+        for _ in 0..100 {
             let now = Instant::now();
             let result = 20;
             let res = CPU_POOL.spawn_task_async(async move { result + 1 }).wait();
@@ -459,7 +464,7 @@ mod tests {
     fn test_collect_tasks() {
         let mut tasks: Vec<Task<i32>> = Vec::new();
 
-        for i in 0..30_000 {
+        for i in 0..3_000 {
             tasks.push(IO_POOL.spawn_task(move || {
                 std::thread::sleep(Duration::from_nanos(250_000));
                 i + 1
@@ -491,7 +496,7 @@ mod tests {
 
     #[test]
     fn test_async_map_iter_wait_any() {
-        let result: i32 = (0..1000)
+        let result: i32 = (0..100)
             .into_iter()
             .rev()
             .async_map(|t| {

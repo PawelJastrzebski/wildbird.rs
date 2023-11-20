@@ -5,7 +5,7 @@ mod lazy;
 pub mod tools;
 
 #[cfg(feature = "rayon")]
-mod threads;
+pub mod threads;
 #[cfg(feature = "rayon")]
 pub use rayon;
 
