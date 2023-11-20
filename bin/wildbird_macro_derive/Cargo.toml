@@ -1,6 +1,6 @@
 [package]
 name = "wildbird_macro_derive"
-version = "0.0.9"
+version = "0.0.10"
 edition = "2021"
 description = "Rust Framework | Macro System"
 license = "MIT"
