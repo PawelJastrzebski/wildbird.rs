@@ -17,6 +17,7 @@ exclude = [
 default = []
 tokio = ["dep:tokio"]
 rayon = ["dep:rayon"]
+timed = []
 timed-log = ["dep:log"]
 timed-tracing = ["dep:tracing"]
 

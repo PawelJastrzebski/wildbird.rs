@@ -1,3 +1,5 @@
+#!/bin/sh
+set -e
 
 test_feature () {
     echo ""
