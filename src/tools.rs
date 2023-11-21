@@ -51,7 +51,7 @@ pub mod block {
     ///         }
     ///     }
     /// }
-    /// 
+    ///
     /// # struct TestImpl;
     /// # impl Test for TestImpl {}
     /// # TestImpl::get_response();
@@ -66,8 +66,20 @@ pub mod block {
     }
     pub use async_block;
 
+    #[macro_export]
+    macro_rules! async_block_unwind {
+        ($($e:tt)*) => {
+            let _ = std::panic::catch_unwind(|| {
+                async {
+                    $($e)*
+                }.block()
+            });
+        }
+    }
+    pub use async_block_unwind;
+
     #[cfg(test)]
-    mod tests {
+    mod test_block {
         use crate::prelude::*;
         use std::time::{Duration, Instant};
 
@@ -78,7 +90,7 @@ pub mod block {
 
         #[test]
         fn should_block() {
-            println!("Res: {}", fetch_from_api().block());
+            assert_eq!("Api respone", fetch_from_api().block());
         }
 
         #[tokio::test(flavor = "multi_thread")]
@@ -104,6 +116,7 @@ pub mod block {
             assert_eq!("Api respone, Api respone", macro_result);
         }
 
+        #[ignore = "only for manual testing"]
         #[tokio::test(flavor = "multi_thread")]
         async fn performance_test() {
             async fn async_fn(i: i32) -> i32 {
@@ -144,6 +157,32 @@ pub mod block {
     }
 }
 
+pub mod unwind {
+
+    #[macro_export]
+    macro_rules! unwind {
+        ($($e:tt)*) => {
+            std::panic::catch_unwind($($e)*)
+        }
+    }
+    pub use unwind;
+
+    #[cfg(test)]
+    mod test_unwind {
+        use super::*;
+
+        #[test]
+        fn test_unwind_closure_success() {
+            let x = String::from("test");
+            if let Some(y) = unwind!(|| x.to_owned() + "ok").ok() {
+                println!("result: y={y} x=moved")
+            } else {
+                println!("operation failed")
+            }
+        }
+    }
+}
+
 pub mod lock {
     use std::sync::Mutex;
 
@@ -159,7 +198,7 @@ pub mod lock {
     }
 
     #[cfg(test)]
-    mod test {
+    mod test_lock {
         use super::*;
         use std::sync::Mutex;
 
@@ -314,7 +353,7 @@ pub mod str {
     }
 
     #[cfg(test)]
-    mod test {
+    mod test_str {
         use super::*;
 
         #[test]
@@ -349,7 +388,7 @@ mod math {
     }
 
     #[cfg(test)]
-    mod test {
+    mod test_math {
         use super::*;
 
         #[test]
