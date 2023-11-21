@@ -8,3 +8,6 @@ pub use crate::threads::{
     AsyncChainIter, AsyncMapIter, ChainTask, CollectTasks, IntoTask, SpawnScopeTask, SpawnTask,
     Task, CPU_POOL, IO_POOL, build_thread_pool
 };
+
+#[cfg(any(feature = "timed_log", feature = "timed_tracing"))]
+pub use crate::_print_timed;

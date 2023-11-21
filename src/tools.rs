@@ -366,7 +366,6 @@ pub mod str {
 }
 
 mod math {
-
     pub trait Round<T> {
         fn round_precision(self, digits: usize) -> T;
     }
@@ -405,6 +404,133 @@ mod math {
                 0.01499999999999999944488848768742172978818416595458984375_f64.round_precision(2)
             );
             assert_eq!(0.01, 0.014999999_f64.round_precision(2));
+        }
+    }
+}
+
+#[cfg(any(feature = "timed_log", feature = "timed_tracing"))]
+mod timed_log {
+
+    #[macro_export]
+    macro_rules! timed {
+        ($name:literal $($code:tt)*) => {
+            let _now = std::time::Instant::now();
+            $($code)*
+            _print_timed!("{}: took {}ms", format!($name) , _now.elapsed().as_millis());
+        };
+
+        ($($code:tt)*) => {
+            let _now = std::time::Instant::now();
+            $($code)*
+            _print_timed!("timed: took {}ms" , _now.elapsed().as_millis());
+        };
+    }
+    pub use timed;
+
+    #[macro_export]
+    macro_rules! timed_return {
+        ($name:literal $($code:tt)*) => {
+            {
+                let _now = std::time::Instant::now();
+                let r = {$($code)*};
+                _print_timed!("{}: took {}ms", format!($name) , _now.elapsed().as_millis());
+                r
+            }
+        };
+
+        ($($code:tt)*) => {
+            {
+                let _now = std::time::Instant::now();
+                let r = {$($code)*};
+                _print_timed!("timed: took {}ms" , _now.elapsed().as_millis());
+                r
+            }
+        };
+    }
+    pub use timed_return;
+
+    #[cfg(all(feature = "timed_log", test))]
+    mod timed_test_log {
+        use crate::prelude::*;
+
+        fn init_log() {
+            use simplelog::*;
+            CombinedLogger::init(vec![TermLogger::new(
+                LevelFilter::Info,
+                Config::default(),
+                TerminalMode::Mixed,
+                ColorChoice::Auto,
+            )])
+            .unwrap();
+        }
+
+        fn wait(millis: u64) {
+            std::thread::sleep(std::time::Duration::from_millis(millis));
+        }
+
+        #[test]
+        pub fn timed_log() {
+            init_log();
+            timed! {
+                wait(10);
+            }
+            timed! { "label"
+                wait(11);
+            }
+
+            let _one = timed_return! {
+                wait(1);
+                1
+            };
+            let _two = timed_return! { "label"
+                wait(2);
+                2
+            };
+            timed_return! { "label"
+                wait(3);
+                3
+            };
+        }
+    }
+
+    #[cfg(all(feature = "timed_tracing", test))]
+    mod timed_test_tracing {
+        use crate::prelude::*;
+
+        fn init_tracing() {
+            tracing_subscriber::fmt()
+                .compact()
+                .with_target(false)
+                .with_max_level(tracing::Level::INFO)
+                .init();
+        }
+
+        fn wait(millis: u64) {
+            std::thread::sleep(std::time::Duration::from_millis(millis));
+        }
+
+        #[test]
+        fn timed_tracing() {
+            init_tracing();
+            timed! {
+                wait(10);
+            }
+            timed! { "label"
+                wait(11);
+            }
+
+            let _one = timed_return! {
+                wait(1);
+                1
+            };
+            let _two = timed_return! { "label"
+                wait(2);
+                2
+            };
+            timed_return! { "label"
+                wait(3);
+                3
+            };
         }
     }
 }
