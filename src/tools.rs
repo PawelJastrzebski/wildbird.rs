@@ -68,15 +68,29 @@ pub mod block {
 
     #[macro_export]
     macro_rules! async_block_unwind {
-        ($($e:tt)*) => {
-            let _ = std::panic::catch_unwind(|| {
+        ($($e:tt)*) => {{
+            std::panic::catch_unwind(|| {
                 async {
                     $($e)*
                 }.block()
-            });
-        }
+            }).ok();
+        }}
     }
     pub use async_block_unwind;
+
+    #[macro_export]
+    macro_rules! async_closure_unwind {
+        ($($e:tt)*) => {(
+            move || {
+                std::panic::catch_unwind(|| {
+                    async {
+                        $($e)*
+                    }.block()
+                }).ok();
+            }
+        )}
+    }
+    pub use async_closure_unwind;
 
     #[cfg(test)]
     mod test_block {
@@ -91,6 +105,18 @@ pub mod block {
         #[test]
         fn should_block() {
             assert_eq!("Api respone", fetch_from_api().block());
+        }
+
+        #[test]
+        fn async_closuer_unwind() {
+            std::thread::spawn(async_closure_unwind! {
+                    assert_eq!("Api respone", fetch_from_api().await);
+                    println!("ok");
+                    panic!("error");
+            })
+            .join()
+            .unwrap();
+            println!("async closure prevented panic");
         }
 
         #[tokio::test(flavor = "multi_thread")]
@@ -410,7 +436,8 @@ mod math {
 
 pub mod prelude {
     pub use super::{
-        block::async_block, block::Block, error::ErrorInto, error::ErrorToString,
-        error::ExpectLazy, error::InspectError, lock::LockUnsafe, math::Round, str::SplitToVec,
+        block::async_block, block::async_block_unwind, block::async_closure_unwind, block::Block,
+        error::ErrorInto, error::ErrorToString, error::ExpectLazy, error::InspectError,
+        lock::LockUnsafe, math::Round, str::SplitToVec,
     };
 }
