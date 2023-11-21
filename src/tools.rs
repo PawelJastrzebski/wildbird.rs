@@ -408,7 +408,7 @@ mod math {
     }
 }
 
-#[cfg(any(feature = "timed_log", feature = "timed_tracing"))]
+#[cfg(any(feature = "timed-log", feature = "timed-tracing"))]
 mod timed_log {
 
     #[macro_export]
@@ -449,7 +449,7 @@ mod timed_log {
     }
     pub use timed_return;
 
-    #[cfg(all(feature = "timed_log", test))]
+    #[cfg(all(feature = "timed-log", test))]
     mod timed_test_log {
         use crate::prelude::*;
 
@@ -493,7 +493,7 @@ mod timed_log {
         }
     }
 
-    #[cfg(all(feature = "timed_tracing", test))]
+    #[cfg(all(feature = "timed-tracing", test))]
     mod timed_test_tracing {
         use crate::prelude::*;
 

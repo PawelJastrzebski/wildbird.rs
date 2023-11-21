@@ -17,8 +17,8 @@ exclude = [
 default = []
 tokio = ["dep:tokio"]
 rayon = ["dep:rayon"]
-timed_log = ["dep:log"]
-timed_tracing = ["dep:tracing"]
+timed-log = ["dep:log"]
+timed-tracing = ["dep:tracing"]
 
 [dependencies]
 wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.10" }

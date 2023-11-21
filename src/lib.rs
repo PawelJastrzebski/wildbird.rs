@@ -8,9 +8,9 @@ pub mod tools;
 pub mod threads;
 #[cfg(feature = "rayon")]
 pub use rayon;
-#[cfg(feature = "timed_log")]
+#[cfg(feature = "timed-log")]
 pub use log::info as _print_timed;
-#[cfg(feature = "timed_tracing")]
+#[cfg(feature = "timed-tracing")]
 pub use tracing::info as _print_timed;
 
 /// Prelude Module

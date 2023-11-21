@@ -8,7 +8,7 @@ test_feature () {
 
 test_feature "rayon"
 test_feature "tokio"
-test_feature "timed_log"
-test_feature "timed_tracing"
+test_feature "timed-log"
+test_feature "timed-tracing"
 
 cargo test
