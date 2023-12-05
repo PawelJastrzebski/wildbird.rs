@@ -434,10 +434,44 @@ mod math {
     }
 }
 
+mod into {
+    pub trait IntoOption<T> {
+        fn none(self) -> Option<T>;
+        fn some(self) -> Option<T>;
+    }
+    
+    impl<T> IntoOption<T> for T {
+        fn none(self) -> Option<T> {
+            None
+        }
+    
+        fn some(self) -> Option<T> {
+            Some(self)
+        }
+    }
+    
+    pub trait IntoResult<T> {
+        fn ok<E>(self) -> Result<T, E>;
+        fn err<S, IE>(self) -> Result<S, IE> where T: Into<IE>;
+    }
+    
+    impl<T> IntoResult<T> for T {
+
+        fn err<S, IE>(self) -> Result<S, IE> where T: Into<IE> {
+            Err(self.into())
+        }
+    
+        fn ok<E>(self) -> Result<T, E> {
+            Ok(self)
+        }
+      
+    }
+}
+
 pub mod prelude {
     pub use super::{
         block::async_block, block::async_block_unwind, block::async_closure_unwind, block::Block,
         error::ErrorInto, error::ErrorToString, error::ExpectLazy, error::InspectError,
-        lock::LockUnsafe, math::Round, str::SplitToVec,
+        lock::LockUnsafe, math::Round, str::SplitToVec, into::IntoOption, into::IntoResult
     };
 }
