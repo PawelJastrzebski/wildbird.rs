@@ -9,16 +9,11 @@ repository = "https://github.com/PawelJastrzebski/wildbird.rs"
 categories = ["data-structures", "development-tools"]
 keywords = [
     "lazy",
-    "static",
-    "async",
     "framework",
-    "dependency",
     "inject",
-    "macros",
     "service",
     "singleton"
 ]
-
 exclude = [
     "DEV.md",
     "tests/*",
@@ -43,8 +38,8 @@ log = {version = "0.4", optional = true}
 tracing = {version = "0.1", optional = true}
 
 [dev-dependencies]
-tokio = {version = "1.28.2", features = ["macros", "rt-multi-thread", "time"]}
-simplelog = "0.12.1"
+tokio = {version = "1.28", features = ["macros", "rt-multi-thread", "time"]}
+simplelog = "0.12"
 tracing-subscriber = "0.3"
 
 [workspace]

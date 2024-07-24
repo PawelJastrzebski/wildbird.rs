@@ -9,12 +9,8 @@ repository = "https://github.com/PawelJastrzebski/wildbird.rs"
 categories = ["data-structures", "development-tools"]
 keywords = [
     "lazy",
-    "static",
-    "async",
     "framework",
-    "dependency",
     "inject",
-    "macros",
     "service",
     "singleton"
 ]
@@ -23,8 +19,8 @@ keywords = [
 proc-macro = true
 
 [dependencies]
-syn = { version = "2.0.18", features = ['full'] }
-quote = "1.0.28"
+syn = { version = "2.0", features = ['full'] }
+quote = "1.0"
 
 [profile.dev]
 opt-level = 0
