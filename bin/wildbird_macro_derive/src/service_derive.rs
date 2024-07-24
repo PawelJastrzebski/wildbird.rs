@@ -1,7 +1,10 @@
-use proc_macro::TokenStream;
-use quote::{format_ident, quote, ToTokens};
-use syn::{Ident, Visibility, ItemFn, ReturnType, ItemStruct, __private::TokenStream2};
 use crate::_utils::*;
+use proc_macro::TokenStream;
+use quote::{format_ident, quote, ToTokens, TokenStreamExt};
+use syn::{
+    FnArg, Ident, ItemFn, ItemStruct, ReturnType, Visibility, __private::TokenStream2,
+    spanned::Spanned,
+};
 
 struct ServiceAttr {
     pub construct: String,
@@ -11,7 +14,11 @@ impl ServiceAttr {
     pub fn parse_attr(attr: TokenStream) -> ServiceAttr {
         let map = parse_attr_to_map(attr);
         ServiceAttr {
-            construct: map.get("construct").unwrap_or(&"".to_string()).clone(),
+            construct: map
+                .get("construct")
+                .or(map.get("constructor"))
+                .unwrap_or(&"".to_string())
+                .clone(),
         }
     }
 }
@@ -56,23 +63,92 @@ fn _impl_instance(struct_name: &Ident) -> TokenStream2 {
     }
 }
 
-fn _impl_service_construct_for_function(fun: ItemFn, errors: &mut CompileErrors) -> TokenStream2 {
+struct ConstructFn {
+    fn_name: TokenStream2,
+    is_async: bool,
+    new_inner_fn: TokenStream2,
+}
+
+fn _construct_function_inject(fun: &ItemFn, errors: &mut CompileErrors) -> ConstructFn {
+    let args: Vec<&FnArg> = fun.sig.inputs.iter().collect();
+    let fn_name = &fun.sig.ident;
     let is_async = fun.sig.asyncness.is_some();
-    let function_name = fun.sig.ident.to_token_stream();
+
+    if args.is_empty() {
+        return ConstructFn {
+            fn_name: fn_name.to_token_stream(),
+            is_async,
+            new_inner_fn: TokenStream2::default(),
+        };
+    }
+
+    let new_fn_name = format_ident!("{}_inject", fn_name);
+    let mut fn_args = quote!();
+    let fn_return = &fun.sig.output;
+
+    for arg in args {
+        match arg {
+            FnArg::Receiver(s) => {
+                errors.add_spaned(s.span(), "'self' not allowed here".to_string());
+                fn_args.append_all(quote!(wildbird::Inject()));
+            }
+            FnArg::Typed(_) => {
+                if fn_args.is_empty() {
+                    fn_args.append_all(quote!(wildbird::Inject()))
+                } else {
+                    fn_args.append_all(quote!(, wildbird::Inject()))
+                }
+            }
+        }
+    }
+
+    let new_inner_fn = if is_async {
+        quote!(
+            async fn #new_fn_name() #fn_return {
+                #fn_name (#fn_args).await
+            }
+        )
+    } else {
+        quote!(
+            fn #new_fn_name() #fn_return {
+                #fn_name (#fn_args)
+            }
+        )
+    };
+
+    return ConstructFn {
+        fn_name: new_fn_name.to_token_stream(),
+        new_inner_fn,
+        is_async,
+    };
+}
+
+fn _impl_service_construct_for_function(fun: ItemFn, errors: &mut CompileErrors) -> TokenStream2 {
+    let ConstructFn {
+        fn_name,
+        is_async,
+        new_inner_fn,
+    } = _construct_function_inject(&fun, errors);
     match fun.sig.output {
         ReturnType::Default => {
-            errors.add(format!("Specify function return type for: {}()", function_name));
-            return TokenStream2::default()
+            errors.add(format!("Specify function return type for: {}()", fn_name));
+            return TokenStream2::default();
         }
         ReturnType::Type(_, t) => {
             let service_type = t.to_token_stream();
             let body = if is_async {
                 quote! {
-                    { wildbird::private::block(async { #function_name().await }) }
+                    {
+                        #new_inner_fn
+                        wildbird::private::block(async { #fn_name().await })
+                    }
                 }
             } else {
                 quote! {
-                    { #function_name() }
+                    {
+                        #new_inner_fn
+                        #fn_name()
+                    }
                 }
             };
             _impl_service(&body, &service_type)

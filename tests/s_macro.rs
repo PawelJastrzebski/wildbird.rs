@@ -3,7 +3,7 @@
 /// use:  cargo expand --test var_macro_async
 mod service {
     use std::sync::Arc;
-    use wildbird::derive::*;
+    use wildbird::{derive::*, Service};
 
     #[service]
     struct HelloService {
