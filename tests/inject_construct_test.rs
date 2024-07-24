@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use wildbird::prelude::*;
 /// Only for debugging
@@ -42,5 +42,25 @@ impl HelloService {
 #[test]
 pub fn should_inject_through_construct() {
     let inner = HelloService.hello();
+    assert_eq!("Inner", inner)
+}
+
+#[allow(dead_code)]
+#[service]
+struct AsyncService {
+    pub hello_service: Arc<HelloService>,
+}
+
+#[service(construct)]
+async fn async_init(hello_service: Arc<HelloService>) -> AsyncService {
+    std::thread::sleep(Duration::from_millis(400));
+    AsyncService {
+        hello_service
+    }
+}
+
+#[test]
+pub fn should_inject_through_construct_async() {
+    let inner = AsyncService.hello_service.hello();
     assert_eq!("Inner", inner)
 }

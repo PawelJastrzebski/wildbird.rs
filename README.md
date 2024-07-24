@@ -2,18 +2,27 @@
 
 <a href="#top"></a>
 
-<h1 style="color: #376FFF; font-size: 2rem; font-weight: 500;">
-    Rust framework 🐦 <sup style="color: black; font-size: 1.2rem; font-weight: 400;"></sup>
+<h1 align="center" style="color: #376FFF; font-size: 2.4rem; font-weight: 500; border: none;">
+Rust Framework  🐦 
+<sup style="color: #777; font-size: 1rem; font-weight: 400;">Wildbird</sup>
 </h1>
+<br />
 
-# Table of contents
+## Introduction 👋
+Welcome to the Wildbird 🐦, designed to streamline your Rust development. Equipped with tools for creating and managing services 🧩 and globals with dependency injection 📌 functionality.
+
+<br />
+
+## Table of contents
 - [Get Started](#get-started)
 - [Services](#services)
 - [Globals](#globals)
+- [Dependency Injection](#dependency-injection)
 - [Authors](#created-by)
-- [License](#license)
 
-# Services
+<br />
+
+## Services
 
 Create service instance (Singleton) in one step
 
@@ -84,8 +93,9 @@ async fn hello_init() -> HelloService {
 }
 ```
 <br />
+<br />
 
-# Globals
+## Globals
 Create global 
 ```rust
 use wildbird::derive::*;
@@ -141,14 +151,50 @@ async fn init_http_service(callback: wildbird::Callback<String>) {
 }
 ```
 <br />
+<br />
 
-# Get started
+## Dependency Injection
+Injection support is currently limited to the `#[service(construct)]` initialization method.
+
+For example:
+```rust
+use wildbird::prelude::*;
+
+#[service]
+struct B {
+    name: String,
+}
+#[service(construct)]
+async fn b_init() -> B {
+    B {
+        name: "Baby 🐤".to_string(),
+    }
+}
+
+#[service]
+struct A {
+    name: String,
+    b_service: Arc<B>
+}
+#[service(construct)]
+async fn a_init(b: Arc<B>) -> A {
+    A {
+        name: "Automobile 🚗".to_string(),
+        b_service: b
+    }
+}
+```
+
+<br />
+<br />
+
+## Get started
 
 ##### Add dependency
 Cargo.toml
 ```toml
 [dependencies]
-wildbird = "^0.0.10"
+wildbird = "^0.0.11"
 ```
 
 ##### Feature flags
@@ -157,8 +203,8 @@ Optional features
 - *tokio* - Use to support tokio async environment
 ```toml
 [dependencies]
-tokio = "1.28.2"
-wildbird = {version = "^0.0.10", features = ["tokio"]}
+tokio = "1.28"
+wildbird = {version = "^0.0.11", features = ["tokio"]}
 ```
 <br />
 
@@ -166,8 +212,10 @@ wildbird = {version = "^0.0.10", features = ["tokio"]}
 
 Project is in early state of development. Each release is prior tested but api changes will most likely to happen in the future as the project progress.
 
+<br />
+<br />
 
-# Created By
+## Created By
 
 <a target="_blank" href="http://wildbirds.studio" >
     <img src="https://wildbirds.studio/img/Logo_full.fe1f5caa.png"  width="30%" height="30%">
@@ -175,10 +223,11 @@ Project is in early state of development. Each release is prior tested but api c
 
 <br />
 
-# License
-
-MIT
+This project is licensed under the MIT License.
 
 <br />
 
 [BACK TO TOP ⬆️](#top)
+
+<br />
+<br />
