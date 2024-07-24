@@ -20,7 +20,7 @@ mod lazy {
     #[test]
     pub fn should_display_and_debug() {
         let _ = DB.clone();
-        println!("DB: {}", DB);
+        println!("DB: {}", *DB);
         println!("DB: {:?}", DB);
     }
 
@@ -40,13 +40,13 @@ mod lazy {
 
     #[tokio::test]
     async fn should_derive_lazy_tokio() {
-        println!("DB: {}", DB);
+        println!("DB: {}", *DB);
         println!("DB: {}", DB);
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn should_derive_lazy_tokio_pool() {
-        println!("DB: {}", DB);
+        println!("DB: {}", *DB);
         println!("DB: {DB}");
     }
 }

@@ -206,35 +206,11 @@ pub mod unwind {
                 println!("operation failed")
             }
         }
-    }
-}
-
-pub mod lock {
-    use std::sync::Mutex;
-
-    /// Lock Mutex unsafe
-    pub trait LockUnsafe<'a, T> {
-        fn lock_unsafe(&'a self) -> std::sync::MutexGuard<'a, T>;
-    }
-
-    impl<'a, T> LockUnsafe<'a, T> for Mutex<T> {
-        fn lock_unsafe(&'a self) -> std::sync::MutexGuard<'a, T> {
-            self.lock().expect("lock_unsafe failed")
-        }
-    }
-
-    #[cfg(test)]
-    mod test_lock {
-        use super::*;
-        use std::sync::Mutex;
 
         #[test]
-        pub fn should_update_mutex() {
-            let mx = Mutex::from("init".to_string());
-            *mx.lock_unsafe() = "ok".to_string();
-
-            let result = mx.lock().unwrap();
-            assert_eq!("ok", result.trim())
+        fn test_unwind_closure_panic() {
+            let res = unwind!(|| panic!("error"));
+            assert!(res.is_err());
         }
     }
 }
@@ -268,13 +244,13 @@ pub mod error {
     pub trait ExpectLazy<T> {
         fn expect_lazy<F>(self, fun: F) -> T
         where
-            F: FnOnce() -> String;
+            F: Fn() -> String;
     }
 
     impl<T, E> ExpectLazy<T> for Result<T, E> {
         fn expect_lazy<F>(self, fun: F) -> T
         where
-            F: FnOnce() -> String,
+            F: Fn() -> String,
         {
             match self {
                 Ok(ok) => ok,
@@ -286,7 +262,7 @@ pub mod error {
     impl<T> ExpectLazy<T> for Option<T> {
         fn expect_lazy<F>(self, fun: F) -> T
         where
-            F: FnOnce() -> String,
+            F: Fn() -> String,
         {
             match self {
                 Some(ok) => ok,
@@ -295,29 +271,12 @@ pub mod error {
         }
     }
 
-    pub trait InspectError<T, E> {
-        fn inspect_error<F>(self, fun: F) -> Result<T, E>
-        where
-            F: FnOnce(&E);
-    }
-
-    impl<T, E> InspectError<T, E> for Result<T, E> {
-        fn inspect_error<F>(self, fun: F) -> Result<T, E>
-        where
-            F: FnOnce(&E),
-        {
-            if let Err(err) = self.as_ref() {
-                fun(err)
-            }
-
-            self
-        }
-    }
-
     #[cfg(test)]
     mod test_error_into {
         use super::ErrorInto;
-        struct Error(String);
+
+        #[derive(Debug, PartialEq, Eq)]
+        struct Error(pub String);
 
         impl Into<Error> for String {
             fn into(self) -> Error {
@@ -336,57 +295,8 @@ pub mod error {
         #[test]
         fn testing() {
             let res = test_into_call();
-            assert!(res.is_err())
-        }
-    }
-
-    #[cfg(test)]
-    mod test_error_inspect {
-        use super::InspectError;
-
-        fn into_test() -> Result<String, String> {
-            Err("ERROR".to_string())
-        }
-
-        #[test]
-        fn testing() {
-            let res = into_test();
             assert!(res.is_err());
-            let _ = res.inspect_error(|e| println!("error inpsect ok: {e}"));
-        }
-    }
-}
-
-pub mod str {
-    pub trait SplitToVec {
-        fn split_to_vec(&self, pattern: impl Into<String>) -> Vec<String>;
-    }
-
-    impl SplitToVec for String {
-        fn split_to_vec(&self, pattern: impl Into<String>) -> Vec<String> {
-            self.split(&pattern.into())
-                .map(|str| str.to_string())
-                .collect()
-        }
-    }
-
-    impl SplitToVec for &str {
-        fn split_to_vec(&self, pattern: impl Into<String>) -> Vec<String> {
-            self.split(&pattern.into())
-                .map(|str| str.to_string())
-                .collect()
-        }
-    }
-
-    #[cfg(test)]
-    mod test_str {
-        use super::*;
-
-        #[test]
-        pub fn should_split() {
-            let res = "test:ok".split_to_vec(":");
-            assert_eq!("test", res[0]);
-            assert_eq!("ok", res[1]);
+            assert_eq!(Error("err".into()), res.unwrap_err());
         }
     }
 }
@@ -439,39 +349,42 @@ mod into {
         fn none(self) -> Option<T>;
         fn some(self) -> Option<T>;
     }
-    
+
     impl<T> IntoOption<T> for T {
         fn none(self) -> Option<T> {
             None
         }
-    
+
         fn some(self) -> Option<T> {
             Some(self)
         }
     }
-    
+
     pub trait IntoResult<T> {
         fn ok<E>(self) -> Result<T, E>;
-        fn err<S, IE>(self) -> Result<S, IE> where T: Into<IE>;
+        fn err<S, IE>(self) -> Result<S, IE>
+        where
+            T: Into<IE>;
     }
-    
-    impl<T> IntoResult<T> for T {
 
-        fn err<S, IE>(self) -> Result<S, IE> where T: Into<IE> {
+    impl<T> IntoResult<T> for T {
+        fn err<S, IE>(self) -> Result<S, IE>
+        where
+            T: Into<IE>,
+        {
             Err(self.into())
         }
-    
+
         fn ok<E>(self) -> Result<T, E> {
             Ok(self)
         }
-      
     }
 }
 
 pub mod prelude {
     pub use super::{
         block::async_block, block::async_block_unwind, block::async_closure_unwind, block::Block,
-        error::ErrorInto, error::ErrorToString, error::ExpectLazy, error::InspectError,
-        lock::LockUnsafe, math::Round, str::SplitToVec, into::IntoOption, into::IntoResult
+        error::ErrorInto, error::ErrorToString, error::ExpectLazy, into::IntoOption,
+        into::IntoResult, math::Round,
     };
 }

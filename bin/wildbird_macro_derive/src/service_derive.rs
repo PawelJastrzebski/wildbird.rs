@@ -1,5 +1,4 @@
 use proc_macro::TokenStream;
-use std::str::FromStr;
 use quote::{format_ident, quote, ToTokens};
 use syn::{Ident, Visibility, ItemFn, ReturnType, ItemStruct, __private::TokenStream2};
 use crate::_utils::*;
@@ -32,15 +31,38 @@ fn _impl_instance(struct_name: &Ident) -> TokenStream2 {
          impl #struct_name {
             fn instance(&self) -> std::sync::Arc<#struct_name> { #struct_name.instance() }
         }
+
+        impl wildbird::private::PrivateService<#struct_name> for #struct_name {
+            fn lazy() -> &'static wildbird::Lazy<#struct_name> { &#struct_name }
+        }
+
+        impl wildbird::private::PrivateService<#struct_name> for & #struct_name {
+            fn lazy() -> &'static wildbird::Lazy<#struct_name> { &#struct_name }
+        }
+
+        impl wildbird::private::PrivateService<#struct_name> for std::sync::Arc<#struct_name> {
+            fn lazy() -> &'static wildbird::Lazy<#struct_name> { &#struct_name }
+        }
+
+        impl wildbird::private::PrivateService<#struct_name> for wildbird::Lazy<#struct_name> {
+            fn lazy() -> &'static wildbird::Lazy<#struct_name> { &#struct_name }
+        }
+
+        impl std::convert::From<&'static wildbird::Lazy<#struct_name>> for & #struct_name {
+            fn from(value: &'static wildbird::Lazy<#struct_name>) -> Self {
+                &value
+            }
+        }
     }
 }
 
-fn _impl_service_construct(fun: ItemFn) -> TokenStream2 {
+fn _impl_service_construct_for_function(fun: ItemFn, errors: &mut CompileErrors) -> TokenStream2 {
     let is_async = fun.sig.asyncness.is_some();
     let function_name = fun.sig.ident.to_token_stream();
     match fun.sig.output {
         ReturnType::Default => {
-            panic!("Specify function return type for: {}()", function_name)
+            errors.add(format!("Specify function return type for: {}()", function_name));
+            return TokenStream2::default()
         }
         ReturnType::Type(_, t) => {
             let service_type = t.to_token_stream();
@@ -85,9 +107,10 @@ pub fn _impl_service(body: &TokenStream2, service_type: &TokenStream2) -> TokenS
 pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
     let source = TokenStream2::from(item.clone());
     let attribute = ServiceAttr::parse_attr(attr.clone());
+    let mut errors = CompileErrors::default();
 
     if let Ok(construct_fn) = syn::parse::<syn::ItemFn>(item.clone()) {
-        let impl_service = _impl_service_construct(construct_fn);
+        let impl_service = _impl_service_construct_for_function(construct_fn, &mut errors);
 
         let res = quote!(
             #source
@@ -101,7 +124,7 @@ pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
         let strict_name = service_struct.ident;
         let static_impl = _impl_static(&strict_name, &service_struct.vis);
         let into_impl = _impl_instance(&strict_name);
-        let mut impl_service = TokenStream2::from_str("").unwrap();
+        let mut impl_service = TokenStream2::default();
 
         if !attribute.construct.is_empty() {
             let is_async = attribute.construct.contains("async");
@@ -111,6 +134,7 @@ pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
 
         let res = quote!(
+            #errors
             #source
             #[automatically_derived]
             #static_impl

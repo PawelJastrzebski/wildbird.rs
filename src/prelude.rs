@@ -2,6 +2,7 @@ pub use crate::derive::*;
 pub use crate::tools::prelude::*;
 pub use crate::Callback;
 pub use crate::Lazy;
+pub use crate::inject::Inject;
 
 #[cfg(feature = "rayon")]
 pub use crate::threads::{

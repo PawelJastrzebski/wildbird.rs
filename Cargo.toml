@@ -41,7 +41,7 @@ members = [
 
 [profile.dev]
 opt-level = 0
-debug = 0
+debug = 1
 incremental = true
 
 [profile.release]

@@ -28,15 +28,15 @@ mod callback_tokio {
     #[test]
     #[cfg(not(feature = "tokio"))]
     pub fn should_derive_lazy() {
-        println!("Option: {:?}", CALLBACK);
-        println!("Number: {:?}", NUMBER);
+        println!("Option: {:?}", *CALLBACK);
+        println!("Number: {:?}", *NUMBER);
     }
 
     #[tokio::test]
     #[cfg(feature = "tokio")]
     pub async fn should_derive_lazy() {
-        println!("Option: {:?}", CALLBACK);
-        println!("Option: {:?}", CALLBACK.instance());
-        println!("Number: {:?}", NUMBER);
+        println!("Option: {:?}", *CALLBACK);
+        println!("Option: {:?}", *CALLBACK.instance());
+        println!("Number: {:?}", *NUMBER);
     }
 }

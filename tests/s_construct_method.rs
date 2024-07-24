@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_variables, non_snake_case)]
-
+/// Only for debugging
+/// use:  cargo expand --test s_construct_method
 mod service {
     use wildbird::derive::*;
 
