@@ -1,10 +1,23 @@
 [package]
 name = "wildbird"
-version = "0.0.10"
+version = "0.0.11"
 edition = "2021"
-description = "Rust Framework"
+description = "Rust Framework 🐦"
 license = "MIT"
 rust-version = "1.70"
+repository = "https://github.com/PawelJastrzebski/wildbird.rs"
+categories = ["data-structures", "development-tools"]
+keywords = [
+    "lazy",
+    "static",
+    "async",
+    "framework",
+    "dependency",
+    "inject",
+    "macros",
+    "service",
+    "singleton"
+]
 
 exclude = [
     "DEV.md",
@@ -22,7 +35,7 @@ timed-log = ["dep:log"]
 timed-tracing = ["dep:tracing"]
 
 [dependencies]
-wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.10" }
+wildbird_macro_derive = { path = "./bin/wildbird_macro_derive", version = "0.0.11" }
 futures-lite = "2"
 tokio = {version = "1", features = ["signal", "rt-multi-thread", "time"], optional = true}
 rayon = {version = "1.8", optional = true}
@@ -41,7 +54,7 @@ members = [
 
 [profile.dev]
 opt-level = 0
-debug = 0
+debug = 1
 incremental = true
 
 [profile.release]

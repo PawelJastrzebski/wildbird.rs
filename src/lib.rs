@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 mod callback;
+mod inject;
 mod lazy;
 pub mod tools;
 
@@ -18,6 +19,7 @@ pub mod prelude;
 pub extern crate wildbird_macro_derive as derive;
 
 pub use self::callback::Callback;
+pub use self::inject::Inject;
 pub use self::lazy::Lazy;
 
 /// Private Module

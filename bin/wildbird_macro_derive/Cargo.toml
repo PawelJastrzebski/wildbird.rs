@@ -1,20 +1,24 @@
 [package]
 name = "wildbird_macro_derive"
-version = "0.0.10"
+version = "0.0.11"
 edition = "2021"
-description = "Rust Framework | Macro System"
+description = "Rust Framework 🐦 | Macro System"
 license = "MIT"
 rust-version = "1.70"
+repository = "https://github.com/PawelJastrzebski/wildbird.rs"
 categories = ["data-structures", "development-tools"]
 keywords = [
     "lazy",
     "static",
     "async",
     "framework",
-    "macros"
+    "dependency",
+    "inject",
+    "macros",
+    "service",
+    "singleton"
 ]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 proc-macro = true
 

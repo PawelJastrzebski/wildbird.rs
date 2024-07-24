@@ -7,18 +7,21 @@ use std::thread::spawn as spawn_blocking;
 use tokio::task::spawn_blocking;
 
 #[inline]
+#[track_caller]
 #[doc(hidden)]
 pub const fn service_construct<S: Service>() -> Lazy<S::Service> {
     Lazy::new(|| S::construct())
 }
 
 #[inline]
+#[track_caller]
 #[doc(hidden)]
 pub const fn lazy_construct<T>(value: fn() -> T) -> Lazy<T> {
     Lazy::new(value)
 }
 
 #[inline]
+#[track_caller]
 #[doc(hidden)]
 pub fn block_callback<T, F, O>(future: fn(Callback<T>) -> F) -> T
 where
@@ -62,4 +65,8 @@ pub fn block<T>(future: impl Future<Output = T>) -> T {
 #[doc(hidden)]
 pub fn block_fn<D, F: Future<Output = D>>(future: fn() -> F) -> D {
     block(future())
+}
+
+pub trait PrivateService<T: 'static> {
+    fn lazy() -> &'static Lazy<T>;
 }
